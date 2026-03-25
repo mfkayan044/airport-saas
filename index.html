@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turizm Transfer Çözümleri | Professional Web Suites</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #3b82f6;
+            --bg: #f8fafc;
+        }
+        body { 
+            font-family: 'Outfit', 'Inter', system-ui, sans-serif; 
+            background: var(--bg); 
+            color: var(--primary); 
+            margin: 0; 
+            padding: 0; 
+            background-image: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0, transparent 50%), radial-gradient(at 50% 0%, rgba(139, 92, 246, 0.05) 0, transparent 50%);
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 100px 20px; text-align: center; }
+        
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 { font-size: 4rem; margin-bottom: 24px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
+        h1 span { color: var(--accent); }
+        
+        .subtitle { font-size: 1.4rem; color: #64748b; margin-bottom: 80px; max-width: 750px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+        
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+        
+        .card { 
+            background: white; 
+            padding: 48px; 
+            border-radius: 32px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 20px 25px -5px rgba(0,0,0,0.1); 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+            text-align: left; 
+            position: relative; 
+            overflow: hidden; 
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .card:hover { transform: translateY(-12px); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.25); border-color: var(--accent); }
+        
+        .card-icon { width: 64px; height: 64px; background: #f1f5f9; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 32px; color: var(--accent); transition: 0.3s; }
+        .card:hover .card-icon { background: var(--accent); color: white; transform: rotate(-5deg) scale(1.1); }
+
+        .card h2 { margin-bottom: 12px; font-size: 1.75rem; font-weight: 700; color: #1e293b; }
+        .card .price { font-size: 1.25rem; font-weight: 600; color: #10b981; margin-bottom: 24px; display: block; }
+        
+        .card p { margin-bottom: 32px; font-size: 1rem; text-align: left; color: #64748b; line-height: 1.6; min-height: 80px; }
+        
+        .card ul { list-style: none; padding: 0; margin-bottom: 48px; }
+        .card li { margin-bottom: 18px; font-size: 0.95rem; display: flex; align-items: center; gap: 12px; color: #475569; }
+        .card li i { color: #10b981; font-size: 1rem; }
+        
+        .btn { 
+            display: inline-block; 
+            width: 100%; 
+            text-decoration: none; 
+            padding: 18px; 
+            background: #f1f5f9; 
+            color: #1e293b; 
+            border-radius: 16px; 
+            font-weight: 700; 
+            text-align: center; 
+            transition: 0.3s;
+            border: 1px solid transparent;
+        }
+        .card:hover .btn { background: var(--accent); color: white; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3); }
+
+        .tier-tag { position: absolute; top: 20px; right: -35px; background: var(--accent); color: white; padding: 8px 45px; font-size: 0.75rem; font-weight: 800; transform: rotate(45deg); letter-spacing: 1.5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        .basic .card-icon { color: #64748b; }
+        .pro { border-bottom: 4px solid var(--accent); }
+        .premium { background: #0f172a; border-color: #1e293b; color: white; }
+        .premium h2, .premium .price { color: white; }
+        .premium .price { color: #fbbf24; }
+        .premium p, .premium li { color: #94a3b8; }
+        .premium .card-icon { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+        .premium .btn { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); }
+        .premium:hover .btn { background: #fbbf24; color: #000; border-color: #fbbf24; }
+        .premium .tier-tag { background: #fbbf24; color: #000; }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2.5rem; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <span class="badge">Transfer Acenteleri İçin Özel Çözümler</span>
+        <h1>Transfer İşletmenizi <span>Dijitale Taşıyın</span></h1>
+        <p class="subtitle">Havalimanı transfer firmanız için 3 farklı seviyede, yüksek dönüşüm odaklı ve profesyonel web sitesi paketleri.</p>
+        
+        <div class="grid">
+            <!-- Eko Paket -->
+            <div class="card basic">
+                <div class="tier-tag">EKO</div>
+                <div class="card-icon"><i class="fas fa-bolt"></i></div>
+                <h2>Giriş Paketi</h2>
+                <span class="price">5.000₺'den başlayan</span>
+                <p>Yeni başlayan butik transfer firmaları için hızlı ve WhatsApp odaklı iniş sayfası.</p>
+                <ul>
+                    <li><i class="fas fa-circle-check"></i> %100 Mobil Uyumlu</li>
+                    <li><i class="fas fa-circle-check"></i> Hızlı Rezervasyon Formu</li>
+                    <li><i class="fas fa-circle-check"></i> Yüzen WhatsApp Butonu</li>
+                    <li><i class="fas fa-circle-check"></i> SEO Dostu Altyapı</li>
+                </ul>
+                <a href="basic-package/index.html" class="btn">Demoyu İncele</a>
+            </div>
+
+            <!-- Pro Paket -->
+            <div class="card pro">
+                <div class="tier-tag">LİMİTED</div>
+                <div class="card-icon"><i class="fas fa-shield-halved"></i></div>
+                <h2>Profesyonel Paket</h2>
+                <span class="price">12.500₺'den başlayan</span>
+                <p>Büyümekte olan acenteler için çok dilli ve kurumsal görünümlü web sitesi.</p>
+                <ul>
+                    <li><i class="fas fa-circle-check"></i> Türkçe & İngilizce Dil</li>
+                    <li><i class="fas fa-circle-check"></i> Filo & Araç Listeleme</li>
+                    <li><i class="fas fa-circle-check"></i> Canlı Sohbet Entegrasyonu</li>
+                    <li><i class="fas fa-circle-check"></i> Gelişmiş Rezervasyon Formu</li>
+                </ul>
+                <a href="pro-package/index.html" class="btn">Demoyu İncele</a>
+            </div>
+
+            <!-- VIP Paket -->
+            <div class="card premium">
+                <div class="tier-tag">PREMIUM</div>
+                <div class="card-icon"><i class="fas fa-crown"></i></div>
+                <h2>VIP Elite Paket</h2>
+                <span class="price">25.000₺'den başlayan</span>
+                <p>En üst segment hizmet verenler için tam otomasyonlu ve prestijli çözüm.</p>
+                <ul>
+                    <li><i class="fas fa-circle-check"></i> Ultra Lüks Karanlık Tema</li>
+                    <li><i class="fas fa-circle-check"></i> Dinamik Mesafe & Ücret Hesabı</li>
+                    <li><i class="fas fa-circle-check"></i> Online Ödeme Altyapısı</li>
+                    <li><i class="fas fa-circle-check"></i> SMS & Mail Bildirimleri</li>
+                </ul>
+                <a href="premium-package/index.html" class="btn">Demoyu İncele</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

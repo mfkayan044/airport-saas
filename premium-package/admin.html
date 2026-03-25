@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EliteDrive Admin | Corporate Intelligence</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; overflow-x: hidden; }
+        .h-font { font-family: 'Outfit', sans-serif; }
+        .sidebar-active { background: #f1f5f9; color: #1d4ed8; border-right: 4px solid #3b82f6; }
+        .card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card:hover { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const STORAGE_KEY = 'eliteAdminData';
+
+        const defaultData = {
+            currency: '₺', phone: '+90 555 000 00 00', email: 'info@elitedrive.com', location: 'İstanbul, Türkiye',
+            whatsapp: '905550000000', vitoEnabled: true, sprinterEnabled: true, vitoPrice: 1200, sprinterPrice: 2000,
+            airports: ['İstanbul Havalimanı (IST)', 'Sabiha Gökçen (SAW)'],
+            districts: ['Sultanahmet', 'Taksim', 'Beşiktaş', 'Kadıköy', 'Şişli', 'Kadıköy', 'Bebek'],
+            routes: [{ id: 1, airport: 'İstanbul Havalimanı (IST)', location: 'Taksim', vehicle: 'Vito', price: 1200 }],
+            reservations: [
+                { id: 'R102', name: 'Muhammed Kayan', phone: '+90 532 411 63 33', from: 'IST', to: 'Sultanahmet', date: '2026-03-26', time: '14:30', vehicle: 'Vito VIP', price: 1200, status: 'Onaylandı' }
+            ]
+        };
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [data, setData] = useState(defaultData);
+            const [toast, setToast] = useState(null);
+            const [refreshing, setRefreshing] = useState(false);
+
+            useEffect(() => {
+                sync();
+                const interval = setInterval(sync, 10000); // Auto-sync every 10s
+                return () => clearInterval(interval);
+            }, []);
+
+            const sync = () => {
+                setRefreshing(true);
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) setData(JSON.parse(saved));
+                else localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+                setTimeout(() => setRefreshing(false), 500);
+            };
+
+            const updateData = (newData) => {
+                setData(newData);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+            };
+
+            const showToast = (msg) => {
+                setToast(msg);
+                setTimeout(() => setToast(null), 3000);
+            };
+
+            const SidebarItem = ({ id, icon, label }) => (
+                <button 
+                    onClick={() => setActiveTab(id)}
+                    className={`w-full flex items-center gap-4 px-8 py-5 transition-all outline-none ${activeTab === id ? 'sidebar-active shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+                >
+                    <i className={`fas ${icon} w-5 text-lg ${activeTab === id ? 'text-blue-600' : 'text-slate-400'}`}></i>
+                    <span className="font-bold text-sm tracking-tight">{label}</span>
+                </button>
+            );
+
+            return (
+                <div className="flex min-h-screen">
+                    {/* Sidebar */}
+                    <aside className="w-72 bg-white border-r border-slate-100 fixed h-full flex flex-col z-50">
+                        <div className="p-10">
+                            <h2 className="text-2xl font-black h-font tracking-tighter text-slate-900 italic">ELITE<span class="text-blue-600">DRIVE</span></h2>
+                            <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mt-2">Intelligence Hub v2.0</p>
+                        </div>
+                        <nav className="flex-1 mt-2">
+                            <SidebarItem id="dashboard" icon="fa-chart-network" label="Genel Bakış" />
+                            <SidebarItem id="bookings" icon="fa-calendar-alt" label="Rezervasyonlar" />
+                            <SidebarItem id="routes" icon="fa-map-marked-alt" label="Fiyat / Güzergah" />
+                            <SidebarItem id="locations" icon="fa-city" label="Lokasyonlar" />
+                            <SidebarItem id="fleet" icon="fa-car-side" label="VIP Filo" />
+                            <SidebarItem id="settings" icon="fa-sliders-h" label="Sistem Ayarları" />
+                        </nav>
+                        <div className="p-8 border-t border-slate-50">
+                            <a href="index.html" target="_blank" className="flex items-center gap-3 text-xs font-black text-slate-400 hover:text-blue-600 transition-all uppercase tracking-widest">
+                                <i className="fas fa-external-link-alt text-lg"></i> Siteyi Aç
+                            </a>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 ml-72 p-12 relative">
+                        <header className="flex justify-between items-center mb-12">
+                            <div>
+                                <h1 className="text-3xl font-black text-slate-900 h-font uppercase tracking-tighter">
+                                    {activeTab === 'dashboard' ? 'Dashboard' :
+                                     activeTab === 'bookings' ? 'Rezervasyon Yönetimi' :
+                                     activeTab === 'routes' ? 'Fiyatlandırma' :
+                                     activeTab === 'locations' ? 'Havalimanı & Bölge' :
+                                     activeTab === 'fleet' ? 'Araç Yönetimi' : 'Yapılandırma'}
+                                </h1>
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Sistem Durumu: <span class="text-green-500">Operasyonel</span></p>
+                            </div>
+                            <div className="flex items-center gap-6">
+                                <button onClick={sync} className={`w-10 h-10 rounded-full bg-white border border-slate-100 text-slate-400 hover:text-blue-600 transition-all shadow-sm ${refreshing ? 'animate-spin' : ''}`}>
+                                    <i className="fas fa-sync-alt"></i>
+                                </button>
+                                <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm">
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">Yönetici</p>
+                                        <p className="text-sm font-black text-blue-600 leading-none tracking-tight">System Admin</p>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black shadow-lg shadow-blue-500/30">SA</div>
+                                </div>
+                            </div>
+                        </header>
+
+                        <div className="animate-in fade-in slide-in-from-bottom-5 duration-700">
+                            {activeTab === 'dashboard' && <DashboardView data={data} />}
+                            {activeTab === 'bookings' && <BookingsView data={data} updateData={updateData} showToast={showToast} />}
+                            {activeTab === 'routes' && <RoutesView data={data} updateData={updateData} showToast={showToast} />}
+                            {activeTab === 'locations' && <LocationsView data={data} updateData={updateData} showToast={showToast} />}
+                            {activeTab === 'fleet' && <FleetView data={data} updateData={updateData} showToast={showToast} />}
+                            {activeTab === 'settings' && <SettingsView data={data} updateData={updateData} showToast={showToast} />}
+                        </div>
+                    </main>
+
+                    {toast && (
+                        <div className="fixed bottom-10 right-10 bg-slate-900 text-white px-8 py-5 rounded-[24px] shadow-2xl flex items-center gap-4 z-[1000] border border-white/10 animate-in slide-in-from-right-10 duration-500">
+                            <i className="fas fa-check-circle text-green-400 text-xl"></i>
+                            <span className="font-bold text-sm tracking-tight">{toast}</span>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // --- SUB VIEWS ---
+
+        const DashboardView = ({ data }) => (
+            <div className="space-y-12">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <StatCard label="Bugünkü Talep" value={data.reservations.filter(r => r.date.includes('2026-03-24')).length || 0} icon="fa-bolt" color="blue" />
+                    <StatCard label="Aylık Hacim" value={data.currency + " 124.800"} icon="fa-wallet" color="green" />
+                    <StatCard label="Aktif Filo" value="%92" icon="fa-car-battery" color="indigo" />
+                    <StatCard label="Onay Oranı" value="%98.4" icon="fa-chart-line" color="orange" />
+                </div>
+                
+                <div className="grid grid-cols-3 gap-10">
+                    <div className="col-span-2 card p-10">
+                        <h3 className="text-xl font-black h-font mb-10 uppercase tracking-tighter">Son Rezervasyonlar</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="border-b border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <tr>
+                                        <th className="pb-4 text-left">Müşteri / ID</th>
+                                        <th className="pb-4 text-left">Rota</th>
+                                        <th className="pb-4 text-right">Durum</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {data.reservations.slice(0, 8).map(r => (
+                                        <tr key={r.id} className="group hover:bg-slate-50 transition-colors">
+                                            <td className="py-5">
+                                                <p className="font-black text-slate-900 tracking-tight text-sm uppercase">{r.name}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase italic mt-1">#{r.id}</p>
+                                            </td>
+                                            <td className="py-5">
+                                                <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">{r.from} ➔ {r.to}</p>
+                                                <p className="text-[10px] text-blue-500 font-bold mt-1">{r.date} / {r.time}</p>
+                                            </td>
+                                            <td className="py-5 text-right">
+                                                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${r.status === 'Onaylandı' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
+                                                    {r.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {data.reservations.length === 0 && <tr><td colSpan="3" class="py-10 text-center font-bold text-slate-300 italic uppercase underline">Herhangi bir kayıt bulunamadı</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div className="card p-10 bg-slate-900 text-white relative overflow-hidden">
+                        <i className="fas fa-shield-check absolute -bottom-10 -right-10 text-[200px] opacity-10"></i>
+                         <h3 className="text-xl font-black h-font mb-10 tracking-tighter">Operasyonel Güç</h3>
+                         <div className="space-y-8 relative z-10">
+                            <div><p className="text-[10px] font-black opacity-50 uppercase mb-2">Günlük Hedef</p><div className="w-full bg-white/10 h-2 rounded-full"><div className="w-[75%] bg-blue-500 h-full rounded-full shadow-lg shadow-blue-500/50"></div></div><p className="text-right text-[10px] mt-2 font-black">75%</p></div>
+                            <div><p className="text-[10px] font-black opacity-50 uppercase mb-2">Bölgesel Yoğunluk</p><p className="font-black h-font text-3xl italic tracking-widest">TAK<span class="text-blue-500">SIM</span></p></div>
+                            <hr className="opacity-10" />
+                            <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-white/10 transition-all">Sistem Raporu Al</button>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const StatCard = ({ label, value, icon, color }) => (
+            <div className="card p-8 flex items-center gap-6">
+                <div className={`w-16 h-16 rounded-[24px] bg-${color}-50 text-${color}-600 flex items-center justify-center text-2xl shadow-inner`}>
+                    <i className={`fas ${icon}`}></i>
+                </div>
+                <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+                    <p className="text-3xl font-black h-font text-slate-900 tracking-tighter leading-none">{value}</p>
+                </div>
+            </div>
+        );
+
+        const BookingsView = ({ data, updateData, showToast }) => {
+            const handleAction = (id, s) => {
+                updateData({ ...data, reservations: data.reservations.map(r => r.id === id ? {...r, status: s} : r) });
+                showToast(`Kayıt #${id} güncellendi`);
+            };
+            return (
+                <div className="card overflow-hidden">
+                    <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                         <h3 className="font-black text-sm uppercase tracking-widest text-slate-500">Aktif Kayıtlar Listesi</h3>
+                         <div className="flex gap-4">
+                            <input type="text" placeholder="ID veya İsim Ara..." className="bg-white border rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-blue-500" />
+                            <button className="bg-slate-900 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Excel'e Aktar</button>
+                         </div>
+                    </div>
+                    <table className="w-full">
+                        <thead className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                            <tr>
+                                <th className="px-10 py-5 text-left">Müşteri Detay</th>
+                                <th className="px-10 py-5 text-left">Güzergah & Tarih</th>
+                                <th className="px-10 py-5 text-left">Ücret / Birim</th>
+                                <th className="px-10 py-5 text-right">Aksiyon</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {data.reservations.map(r => (
+                                <tr key={r.id} className="hover:bg-slate-50 transition-all">
+                                    <td className="px-10 py-8">
+                                        <p className="font-extrabold text-slate-900 text-md uppercase tracking-tight">{r.name}</p>
+                                        <p className="text-xs font-medium text-slate-500 mt-1">{r.phone}</p>
+                                        <p className="text-[9px] text-blue-500 font-black mt-2 bg-blue-50 inline-block px-2 py-0.5 rounded-full uppercase tracking-widest">{r.vehicle}</p>
+                                    </td>
+                                    <td className="px-10 py-8">
+                                        <p className="font-bold text-slate-700 text-sm uppercase">{r.from} ➔ {r.to}</p>
+                                        <div className="flex items-center gap-3 mt-2">
+                                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest"><i className="far fa-calendar-alt"></i> {r.date}</span>
+                                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest"><i className="far fa-clock"></i> {r.time}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-10 py-8 font-black text-xl text-slate-900 italic">{data.currency}{r.price}</td>
+                                    <td className="px-10 py-8 text-right">
+                                        <select 
+                                            value={r.status} 
+                                            onChange={(e) => handleAction(r.id, e.target.value)}
+                                            className={`outline-none px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm ${r.status === 'Onaylandı' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}
+                                        >
+                                            <option>Bekliyor</option>
+                                            <option>Onaylandı</option>
+                                            <option>İptal</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        };
+
+        const RoutesView = ({ data, updateData, showToast }) => {
+            const [rt, setRt] = useState({ airport: data.airports[0], location: data.districts[0], vehicle: 'Vito', price: 0 });
+            return (
+                <div className="space-y-10">
+                    <div className="card p-10 bg-white">
+                        <h3 className="text-xl font-black h-font mb-10 uppercase tracking-tighter">Lokasyon Bazlı Fiyatlandırma</h3>
+                        <div className="grid grid-cols-4 gap-8">
+                            <Inp label="Havalimanı" type="select" options={data.airports} val={rt.airport} onChange={v => setRt({...rt, airport: v})} />
+                            <Inp label="Varış Bölgesi" type="select" options={data.districts} val={rt.location} onChange={v => setRt({...rt, location: v})} />
+                            <Inp label={`Fiyat (${data.currency})`} type="number" val={rt.price} onChange={v => setRt({...rt, price: v})} />
+                            <div className="flex items-end"><button onClick={() => { updateData({...data, routes: [{...rt, id: Date.now()}, ...data.routes]}); showToast('Fiyat kaydedildi'); }} className="w-full h-14 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 shadow-xl transition-all">EKLE / GÜNCELLE</button></div>
+                        </div>
+                    </div>
+                    <div className="card p-8">
+                        <table className="w-full">
+                            <thead className="text-[10px] font-black text-slate-300 uppercase tracking-widest border-b pb-4">
+                                <tr>
+                                    <th className="text-left pb-4">Havalimanı</th>
+                                    <th className="text-left pb-4">Bölge</th>
+                                    <th className="text-left pb-4">Fiyat</th>
+                                    <th className="text-right pb-4"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.routes.map(r => (
+                                    <tr key={r.id} className="border-b last:border-0 border-slate-50">
+                                        <td className="py-6 font-black text-slate-900 text-sm uppercase">{r.airport}</td>
+                                        <td className="py-6 font-bold text-slate-500 uppercase text-xs">{r.location}</td>
+                                        <td className="py-6 font-black text-lg text-blue-600 italic">{data.currency}{r.price}</td>
+                                        <td className="py-6 text-right"><button onClick={() => updateData({...data, routes: data.routes.filter(i => i.id !== r.id)})} className="text-red-300 hover:text-red-500"><i className="fas fa-trash"></i></button></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+
+        const LocationsView = ({ data, updateData, showToast }) => {
+            const [a, setA] = useState('');
+            const [d, setD] = useState('');
+            const add = (type, val, setter) => {
+                if(!val) return;
+                const up = { ...data };
+                up[type] = [...up[type], val];
+                updateData(up); setter(''); showToast('Eklendi');
+            };
+            return (
+                <div className="grid grid-cols-2 gap-10">
+                    <div className="card p-10">
+                        <h3 className="text-xl font-black h-font mb-8 uppercase tracking-tighter">Havalimanları</h3>
+                        <div className="flex gap-4 mb-8">
+                            <input type="text" className="flex-1 bg-slate-50 p-4 rounded-2xl outline-none font-bold text-sm focus:bg-white border focus:border-blue-200" placeholder="Örn: Antalya Havalimanı (AYT)" value={a} onChange={e => setA(e.target.value)} />
+                            <button onClick={() => add('airports', a, setA)} className="bg-black text-white px-8 rounded-2xl font-black text-xs uppercase tracking-widest">EKLE</button>
+                        </div>
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                            {data.airports.map(i => <div key={i} className="flex justify-between items-center bg-slate-50 p-5 rounded-2xl group hover:shadow-md transition-all border border-transparent hover:border-blue-100"><span className="font-bold text-slate-700 uppercase tracking-tight text-sm">{i}</span><i className="fas fa-times-circle text-red-100 hover:text-red-400 cursor-pointer" onClick={() => updateData({...data, airports: data.airports.filter(x => x !== i)})}></i></div>)}
+                        </div>
+                    </div>
+                    <div className="card p-10">
+                        <h3 className="text-xl font-black h-font mb-8 uppercase tracking-tighter">TRANSFER BÖLGELERİ</h3>
+                        <div className="flex gap-4 mb-8">
+                            <input type="text" className="flex-1 bg-slate-50 p-4 rounded-2xl outline-none font-bold text-sm focus:bg-white border focus:border-blue-200" placeholder="Örn: Bodrum / Yalıkavak" value={d} onChange={e => setD(e.target.value)} />
+                            <button onClick={() => add('districts', d, setD)} className="bg-black text-white px-8 rounded-2xl font-black text-xs uppercase tracking-widest">EKLE</button>
+                        </div>
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                            {data.districts.map(i => <div key={i} className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl group hover:shadow-md transition-all border border-transparent hover:border-blue-100"><span className="font-bold text-slate-700 uppercase tracking-tight text-sm">{i}</span><i className="fas fa-times-circle text-red-100 hover:text-red-400 cursor-pointer" onClick={() => updateData({...data, districts: data.districts.filter(x => x !== i)})}></i></div>)}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const FleetView = ({ data, updateData, showToast }) => (
+            <div className="grid grid-cols-2 gap-10">
+                <CarItem label="Mercedes Vito VIP" img="/premium-package/images/vito.png" en={data.vitoEnabled} pr={data.vitoPrice} toggle={() => updateData({...data, vitoEnabled: !data.vitoEnabled})} cur={data.currency} />
+                <CarItem label="Mercedes Sprinter" img="/premium-package/images/sprinter.png" en={data.sprinterEnabled} pr={data.sprinterPrice} toggle={() => updateData({...data, sprinterEnabled: !data.sprinterEnabled})} cur={data.currency} />
+            </div>
+        );
+
+        const CarItem = ({ label, img, en, pr, toggle, cur }) => (
+            <div className="card p-12 text-center relative overflow-hidden group">
+                 <div className={`absolute top-6 right-6 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest ${en ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>{en ? 'Aktif' : 'Pasif'}</div>
+                 <img src={img} className="h-48 mx-auto mb-10 object-contain drop-shadow-2xl transition-transform group-hover:scale-110 duration-700" />
+                 <h4 className="text-3xl font-black h-font mb-4 tracking-tighter uppercase">{label}</h4>
+                 <p className="text-4xl font-black text-blue-600 mb-10 italic uppercase tracking-tighter">{cur}{pr}</p>
+                 <button onClick={toggle} className={`w-full py-5 rounded-[24px] font-black text-[11px] tracking-widest uppercase transition-all shadow-xl ${en ? 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white hover:bg-green-700 shadow-green-200'}`}>
+                    {en ? 'Sistemi Kapat' : 'Sistemi Aç'}
+                 </button>
+            </div>
+        );
+
+        const SettingsView = ({ data, updateData, showToast }) => {
+            const [local, setLocal] = useState(data);
+            return (
+                <div className="max-w-4xl mx-auto space-y-10">
+                    <div className="card p-12">
+                         <h3 className="text-2xl font-black h-font mb-10 border-b pb-6 uppercase tracking-tighter">Kurumsal Yapılandırma</h3>
+                         <div className="grid grid-cols-2 gap-8">
+                             <Inp label="WHATSAPP MERKEZ (KODSUZ)" val={local.whatsapp} onChange={v => setLocal({...local, whatsapp: v})} />
+                             <Inp label="GSM İLETİŞİM" val={local.phone} onChange={v => setLocal({...local, phone: v})} />
+                             <Inp label="E-POSTA" val={local.email} onChange={v => setLocal({...local, email: v})} />
+                             <Inp label="PARA BİRİMİ" type="select" options={['₺', '€', '$']} val={local.currency} onChange={v => setLocal({...local, currency: v})} />
+                         </div>
+                         <button onClick={() => { updateData(local); showToast('Ayarlar güncellendi'); }} className="mt-12 w-full py-6 bg-blue-600 text-white rounded-[24px] font-black text-sm uppercase tracking-widest shadow-2xl shadow-blue-500/30 hover:bg-blue-700 transition-all">DEĞİŞİKLİKLERİ KAYDET</button>
+                    </div>
+                    <div className="card p-10 bg-red-50 border-red-100 flex justify-between items-center">
+                         <div>
+                            <h4 className="text-red-900 font-black h-font tracking-tight uppercase">Sistem Sıfırlama</h4>
+                            <p className="text-xs text-red-600 font-bold uppercase tracking-widest opacity-60 mt-1">Tüm verileri siler ve fabrika ayarlarına döner.</p>
+                         </div>
+                         <button onClick={() => { localStorage.removeItem(STORAGE_KEY); window.location.reload(); }} className="px-10 py-4 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-700 shadow-lg">TÜMÜNÜ SIFIRLA</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const Inp = ({ label, type = 'text', options, val, onChange }) => (
+            <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">{label}</label>
+                {type === 'select' ? (
+                    <select value={val} onChange={e => onChange(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-extrabold focus:bg-white border focus:border-blue-200 uppercase tracking-tight text-sm">
+                        {options.map(o => <option key={o}>{o}</option>)}
+                    </select>
+                ) : (
+                    <input type={type} value={val} onChange={e => onChange(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-extrabold focus:bg-white border focus:border-blue-200 uppercase tracking-tight text-sm" />
+                )}
+            </div>
+        );
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

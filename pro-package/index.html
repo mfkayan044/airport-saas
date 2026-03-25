@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTrans | Profesyonel Havalimanı Transfer Çözümleri</title>
+    <meta name="description" content="ProTrans - Kurumsal havalimanı transfer hizmetleri. Çok dilli destek, geniş araç filosu ve profesyonel şoförler.">
+    <link rel="stylesheet" href="/pro-package/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-shield-alt" style="color: var(--accent); font-size: 1.4rem;"></i>
+                <span style="font-weight: 800; font-size: 1.4rem; color: var(--primary);">Pro<span style="color: var(--accent);">Trans</span></span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#fleet">Filomuz</a></li>
+                <li><a href="#pricing">Fiyatlar</a></li>
+                <li><a href="#testimonials">Yorumlar</a></li>
+                <li><a href="#features">Özellikler</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div class="lang-toggle">
+                    <button class="lang-btn active" onclick="switchLang('tr')">TR</button>
+                    <button class="lang-btn" onclick="switchLang('en')">EN</button>
+                    <button class="lang-btn" onclick="switchLang('de')">DE</button>
+                </div>
+                <a href="#booking" class="nav-cta">Hemen Rezervasyon</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-pro">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-text">
+                    <span class="badge"><i class="fas fa-check-circle"></i> <span data-tr="7/24 Profesyonel Hizmet" data-en="24/7 Professional Service" data-de="24/7 Professioneller Service">7/24 Profesyonel Hizmet</span></span>
+                    <h1 data-tr="Kurumsal Kalitede Havalimanı Transferi" data-en="Corporate Quality Airport Transfers" data-de="Flughafentransfer in Unternehmensqualität">Kurumsal Kalitede Havalimanı Transferi</h1>
+                    <p data-tr="İş seyahatleriniz ve tatiliniz için güvenilir, zamanında ve konforlu ulaşım ortağınız. 3 dilde hizmet, detaylı filo ve sabit fiyat garantisi." data-en="Your reliable, on-time and comfortable transportation partner for business trips and vacations. Service in 3 languages, detailed fleet and fixed price guarantee." data-de="Ihr zuverlässiger, pünktlicher und komfortabler Transportpartner für Geschäftsreisen und Urlaub. Service in 3 Sprachen, detaillierte Flotte und Festpreisgarantie.">İş seyahatleriniz ve tatiliniz için güvenilir, zamanında ve konforlu ulaşım ortağınız. 3 dilde hizmet, detaylı filo ve sabit fiyat garantisi.</p>
+                    <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                        <a href="#booking" class="nav-cta" style="padding: 16px 32px; font-size: 1rem;">
+                            <i class="fas fa-arrow-right" style="margin-right:6px;"></i> <span data-tr="Rezervasyon Yap" data-en="Book Now" data-de="Jetzt Buchen">Rezervasyon Yap</span>
+                        </a>
+                        <a href="#pricing" style="text-decoration:none; color:var(--accent); font-weight:600; display:flex; align-items:center; gap:8px; font-size: 0.95rem;">
+                            <span data-tr="Fiyatları İncele" data-en="View Prices" data-de="Preise Ansehen">Fiyatları İncele</span> <i class="fas fa-chevron-right" style="font-size:0.7rem;"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-img"></div>
+            </div>
+
+            <!-- Booking Bar -->
+            <div id="booking" class="booking-bar">
+                <div class="legal-notice" style="margin-bottom:20px;">
+                    <i class="fas fa-info-circle"></i>
+                    <span data-tr="Transferler yalnızca havalimanı ile otel veya adres arasında yapılmaktadır." data-en="Transfers are only available between the airport and hotel/address." data-de="Transfers sind nur zwischen dem Flughafen und Hotel/Adresse verfügbar.">Transferler yalnızca havalimanı ile otel veya adres arasında yapılmaktadır.</span>
+                </div>
+                <form id="bookingForm" class="booking-form-row" style="grid-template-columns: 1.2fr 1.2fr 1.2fr 1fr 1fr 0.8fr auto; gap: 15px;">
+                    <div class="input-group">
+                        <label data-tr="TRANSFER YÖNÜ" data-en="TRANSFER DIRECTION" data-de="TRANSFERRICHTUNG">Transfer Yönü</label>
+                        <select id="proTransferType" onchange="updateProFields()">
+                            <option value="from_airport" data-tr="Havalimanından Al" data-en="From Airport" data-de="Vom Flughafen">Havalimanından Al</option>
+                            <option value="to_airport" data-tr="Havalimanına Bırak" data-en="To Airport" data-de="Zum Flughafen">Havalimanına Bırak</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="proAirportGroup">
+                        <label data-tr="HAVALİMANI" data-en="AIRPORT" data-de="FLUGHAFEN">Havalimanı</label>
+                        <select id="proAirport"></select>
+                    </div>
+                    <div class="input-group">
+                        <label data-tr="LOKASYON / BÖLGE" data-en="LOCATION / DISTRICT" data-de="STANDORT / BEZIRK" id="proAddressLabel">Lokasyon / Bölge</label>
+                        <select id="proDistrict"></select>
+                    </div>
+                    <div class="input-group">
+                        <label data-tr="KİŞİ" data-en="PAX" data-de="PERSONEN">Kişi</label>
+                        <select id="proPax">
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                            <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                            <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label data-tr="TARİH" data-en="DATE" data-de="DATUM">Tarih</label>
+                        <input type="date" id="proDate">
+                    </div>
+                    <div class="input-group">
+                        <label data-tr="TİP" data-en="TRIP" data-de="FAHRT">Tip</label>
+                        <select id="proTripType" onchange="updateProReturn()">
+                            <option value="one_way" data-tr="Tek Yön" data-en="One Way" data-de="Einfach">Tek Yön</option>
+                            <option value="round_trip" data-tr="Çift Yön" data-en="Round Trip" data-de="Hin & Rück">Çift Yön</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-book" data-tr="Fiyat Al" data-en="Get Price" data-de="Preis">Fiyat Al</button>
+                </form>
+                <div id="proReturnRow" class="booking-extra" style="display:none; margin-top:16px;">
+                    <div class="input-group">
+                        <label data-tr="DÖNÜŞ TARİHİ" data-en="RETURN DATE" data-de="RÜCKFAHRT">Dönüş Tarihi</label>
+                        <input type="date" id="proReturnDate">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MULTI-STEP BOOKING MODAL ===== -->
+    <div id="priceModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);overflow-y:auto;padding:20px 16px;">
+        <div style="max-width:600px;margin:20px auto;background:white;border-radius:28px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,0.2);animation:modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+            <!-- Header -->
+            <div style="background:var(--primary);padding:32px;color:white;text-align:center;position:relative;">
+                <button onclick="closePriceModal()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:white;width:32px;height:32px;border-radius:10px;cursor:pointer;">✕</button>
+                <div class="step-indicator" id="stepIndicator">
+                    <div class="step-dot active"></div>
+                    <div class="step-dot"></div>
+                    <div class="step-dot"></div>
+                </div>
+                <h3 id="modalTitle" style="font-size:1.4rem; font-weight:800;">Transfer Seçenekleri</h3>
+            </div>
+            
+            <!-- Body -->
+            <div style="padding:40px;" id="modalBody">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Fleet Section -->
+    <section id="fleet" class="fleet-section">
+        <div class="container">
+            <div class="section-head">
+                <h2 data-tr="Araç Filomuz" data-en="Our Fleet" data-de="Unsere Flotte">Araç Filomuz</h2>
+                <p data-tr="Havalimanı transferi için yasal ve konforlu araç seçenekleri." data-en="Legal and comfortable vehicle options for airport transfers." data-de="Legale und komfortable Fahrzeugoptionen für Flughafentransfers.">Havalimanı transferi için yasal ve konforlu araç seçenekleri.</p>
+            </div>
+            <div class="fleet-grid" id="fleetGrid"></div>
+        </div>
+    </section>
+
+    <!-- Popular Routes -->
+    <section id="pricing" class="routes">
+        <div class="container">
+            <div class="section-head">
+                <h2 data-tr="Popüler Güzergahlar" data-en="Popular Routes" data-de="Beliebte Routen">Popüler Güzergahlar</h2>
+                <p data-tr="En çok tercih edilen hatlarımızda sabit fiyat avantajı." data-en="Fixed price advantage on our most popular routes." data-de="Festpreisvorteil auf unseren beliebtesten Strecken.">En çok tercih edilen hatlarımızda sabit fiyat avantajı.</p>
+            </div>
+            <div class="pricing-grid" id="routesGrid"></div>
+        </div>
+    </section>
+
+    <!-- Features Strip -->
+    <section id="features" class="features-strip">
+        <div class="container">
+            <div class="features-row">
+                <div class="feature-box">
+                    <i class="fas fa-globe"></i>
+                    <h4 data-tr="Çok Dilli Destek" data-en="Multi-Language" data-de="Mehrsprachig">Çok Dilli Destek</h4>
+                    <p data-tr="Türkçe, İngilizce ve Almanca müşteri desteği ile uluslararası hizmet.">Türkçe, İngilizce ve Almanca müşteri desteği.</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-plane-departure"></i>
+                    <h4 data-tr="Uçuş Takibi" data-en="Flight Tracking" data-de="Flugverfolgung">Uçuş Takibi</h4>
+                    <p data-tr="Canlı uçuş takibi ile rötar durumlarında otomatik saat güncelleme.">Canlı uçuş takibi ve rötar desteği.</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-comments"></i>
+                    <h4 data-tr="Canlı Sohbet" data-en="Live Chat" data-de="Live-Chat">Canlı Sohbet</h4>
+                    <p data-tr="Web sitesi üzerinden anlık canlı destek ile anında iletişim.">Anlık canlı destek ile iletişim.</p>
+                </div>
+                <div class="feature-box">
+                    <i class="fas fa-credit-card"></i>
+                    <h4 data-tr="Kolay Ödeme" data-en="Easy Payment" data-de="Einfache Zahlung">Kolay Ödeme</h4>
+                    <p data-tr="Kredi kartı, havale veya kapıda nakit ile esnek ödeme seçenekleri.">Esnek ödeme seçenekleri.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="testimonials">
+        <div class="container">
+            <div class="section-head">
+                <h2 data-tr="Müşteri Yorumları" data-en="Customer Reviews" data-de="Kundenbewertungen">Müşteri Yorumları</h2>
+                <p data-tr="Binlerce müşterinin güvenle tercih ettiği hizmet kalitesi.">Müşterilerimizin memnuniyet yorumları.</p>
+            </div>
+            <div class="testimonials-grid" id="testimonialsGrid"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div style="font-weight: 800; font-size: 1.4rem; margin-bottom: 24px;">
+                        Pro<span style="color: var(--accent);">Trans</span>
+                    </div>
+                    <p style="color: #94a3b8; font-size: 0.92rem; max-width: 360px;" id="footerDesc">Profesyonel ulaşım standartlarını belirleyen güvenilir çözüm ortağınız.</p>
+                </div>
+                <div class="footer-col" id="footerContact">
+                    <h4 data-tr="İletişim" data-en="Contact" data-de="Kontakt">İletişim</h4>
+                    <p style="color:#94a3b8; margin-bottom: 12px;" id="footerPhone"></p>
+                    <p style="color:#94a3b8; margin-bottom: 12px;" id="footerEmail"></p>
+                    <p style="color:#94a3b8;" id="footerLocation"></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                &copy; 2024 ProTrans. Tüm Hakları Saklıdır.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Admin link -->
+    <a href="/pro-package/admin.html" style="position:fixed;bottom:24px;left:24px;z-index:9999;background:rgba(15,23,42,0.8);backdrop-filter:blur(8px);color:white;border:1px solid rgba(255,255,255,0.1);padding:12px 20px;border-radius:14px;text-decoration:none;font-weight:700;font-size:0.85rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);display:flex;align-items:center;gap:8px;">⚙ <span>Yönetici Paneli</span></a>
+
+    <script>
+    var currentLang = 'tr';
+    var bookingData = {};
+
+    function loadSiteData() {
+        var raw = localStorage.getItem('proAdminData');
+        return raw ? JSON.parse(raw) : null;
+    }
+
+    function getCurrency() {
+        var d = loadSiteData();
+        return (d && d.currency) ? d.currency : '₺';
+    }
+
+    function populateDropdowns() {
+        var d = loadSiteData();
+        var airportSel = document.getElementById('proAirport');
+        var districtSel = document.getElementById('proDistrict');
+        if(!airportSel || !districtSel) return;
+        
+        var airports = (d && d.airports) ? d.airports : ['İstanbul Havalimanı (IST)', 'Sabiha Gökçen (SAW)'];
+        var districts = (d && d.districts) ? d.districts : ['Sultanahmet', 'Taksim', 'Beşiktaş'];
+        
+        airportSel.innerHTML = airports.map(a => `<option value="${a}">${a}</option>`).join('');
+        districtSel.innerHTML = districts.map(d => `<option value="${d}">${d}</option>`).join('');
+    }
+
+    function switchLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.textContent === lang.toUpperCase()));
+        document.querySelectorAll('[data-' + lang + ']').forEach(el => {
+            var val = el.getAttribute('data-' + lang);
+            if(el.tagName === 'INPUT') el.placeholder = val;
+            else el.textContent = val;
+        });
+    }
+
+    function updateProFields() {
+        var type = document.getElementById('proTransferType').value;
+        var label = document.getElementById('proAddressLabel');
+        label.textContent = type === 'from_airport' ? (currentLang === 'tr' ? 'Varış Lokasyonu' : 'Drop-off Location') : (currentLang === 'tr' ? 'Alış Lokasyonu' : 'Pick-up Location');
+    }
+
+    function updateProReturn() {
+        var trip = document.getElementById('proTripType').value;
+        document.getElementById('proReturnRow').style.display = trip === 'round_trip' ? 'block' : 'none';
+    }
+
+    function closePriceModal() { document.getElementById('priceModal').style.display = 'none'; }
+
+    // ===== MODAL STEP 1: VEHICLE & PRICE =====
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var data = loadSiteData();
+        bookingData = {
+            type: document.getElementById('proTransferType').value,
+            airport: document.getElementById('proAirport').value,
+            district: document.getElementById('proDistrict').value,
+            date: document.getElementById('proDate').value,
+            pax: parseInt(document.getElementById('proPax').value),
+            trip: document.getElementById('proTripType').value,
+            returnDate: document.getElementById('proReturnDate').value
+        };
+
+        if(!bookingData.date) { alert('Lütfen tarih seçiniz.'); return; }
+
+        var foundRoute = null;
+        if(data && data.routes) {
+            data.routes.forEach(r => {
+                if(r.airport === bookingData.airport && r.location === bookingData.district) foundRoute = r;
+            });
+        }
+        bookingData.route = foundRoute;
+        renderStep1();
+        document.getElementById('priceModal').style.display = 'block';
+    });
+
+    function renderStep1() {
+        updateStepIndicator(1);
+        var c = getCurrency();
+        var html = `
+            <div style="text-align:center; padding-bottom:32px;">
+                <div style="font-size:0.85rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">${bookingData.trip === 'round_trip' ? 'Gidiş-Dönüş' : 'Tek Yön'} Transfer</div>
+                <h4 style="font-size:1.4rem; font-weight:800;">${bookingData.airport} <br> <i class="fas fa-arrow-down" style="padding:10px; font-size:0.9rem; color:var(--accent);"></i> <br> ${bookingData.district}</h4>
+            </div>
+        `;
+
+        if(bookingData.route) {
+            var basePrice = bookingData.route.price;
+            var total = bookingData.trip === 'round_trip' ? basePrice * 2 : basePrice;
+            html += `
+                <div style="background:var(--bg-alt); padding:24px; border-radius:20px; border:2px solid var(--accent); position:relative; overflow:hidden;">
+                    <span style="position:absolute; top:0; right:0; background:var(--accent); color:white; padding:4px 12px; font-size:0.7rem; font-weight:800; border-radius:0 0 0 12px;">EN İYİ FİYAT</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:800; font-size:1.1rem;">Mercedes Vito VIP</div>
+                            <div style="font-size:0.85rem; color:var(--text-muted);">${bookingData.pax} Yolcu | Wi-Fi | Klima</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.8rem; font-weight:900; color:var(--accent);">${c}${total}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Her Şey Dahil Sabit Fiyat</div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="renderStep2()" class="btn-book" style="width:100%; margin-top:24px; padding:18px;">Hemen İlerle <i class="fas fa-chevron-right" style="margin-left:8px;"></i></button>
+            `;
+        } else {
+            html += `<div style="padding:30px; background:#fff7ed; border:1px solid #ffedd5; border-radius:16px; color:#9a3412; text-align:center;"><i class="fas fa-exclamation-circle" style="font-size:2rem; margin-bottom:12px;"></i><p>Bu güzergah için online fiyat bilgisi tanımlı değil. Özel teklif almak için lüfen ilerleyin.</p></div>
+            <button onclick="renderStep2()" class="btn-book" style="width:100%; margin-top:24px; padding:18px;">Teklif İste <i class="fas fa-chevron-right" style="margin-left:8px;"></i></button>`;
+        }
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('modalTitle').textContent = 'Transfer Özeti';
+    }
+
+    // ===== MODAL STEP 2: PASSENGER DETAILS =====
+    function renderStep2() {
+        updateStepIndicator(2);
+        document.getElementById('modalTitle').textContent = 'Yolcu Bilgileri';
+        var html = `
+            <div style="display:flex; flex-direction:column; gap:20px;">
+                <div class="modal-form-group">
+                    <label>Uçuş Kodu (Geliş - Zorunlu)</label>
+                    <input type="text" class="modal-input" id="flightIn" placeholder="Örn: TK1822" required>
+                </div>
+                ${bookingData.trip === 'round_trip' ? `<div class="modal-form-group">
+                    <label>Uçuş Kodu (Dönüş - Zorunlu)</label>
+                    <input type="text" class="modal-input" id="flightOut" placeholder="Örn: LH2455">
+                </div>` : ''}
+                <div class="modal-form-group">
+                    <label>Yolcu İsimleri (${bookingData.pax} Kişi)</label>
+                    ${Array.from({length: bookingData.pax}).map((_, i) => `<div class="passenger-row" style="margin-bottom:8px;"><input type="text" placeholder="Ad" class="modal-input pax-name"><input type="text" placeholder="Soyad" class="modal-input pax-surname"></div>`).join('')}
+                </div>
+                <div class="modal-form-group">
+                    <label>İletişim Telefon No</label>
+                    <input type="tel" class="modal-input" id="contactTel" placeholder="+90 5XX XXX XX XX">
+                </div>
+                <button onclick="validateAndStep3()" class="btn-book" style="width:100%; padding:18px;">Özeti Gör <i class="fas fa-check" style="margin-left:8px;"></i></button>
+            </div>
+        `;
+        document.getElementById('modalBody').innerHTML = html;
+    }
+
+    function validateAndStep3() {
+        var fi = document.getElementById('flightIn').value;
+        var ct = document.getElementById('contactTel').value;
+        if(!fi || !ct) { alert('Lütfen zorunlu alanları doldurun.'); return; }
+        
+        bookingData.flightIn = fi;
+        bookingData.flightOut = document.getElementById('flightOut') ? document.getElementById('flightOut').value : '';
+        bookingData.tel = ct;
+        bookingData.passengers = Array.from(document.querySelectorAll('.passenger-row')).map(row => {
+            return row.children[0].value + ' ' + row.children[1].value;
+        }).filter(name => name.trim() !== '');
+        
+        renderStep3();
+    }
+
+    // ===== MODAL STEP 3: FINAL & WHATSAPP =====
+    function renderStep3() {
+        updateStepIndicator(3);
+        document.getElementById('modalTitle').textContent = 'Rezervasyon Onayı';
+        var c = getCurrency();
+        var total = bookingData.route ? (bookingData.trip === 'round_trip' ? bookingData.route.price * 2 : bookingData.route.price) : 'Özel Teklif';
+        var priceStr = bookingData.route ? c + total : 'Özel Fiyat Sorunuz';
+
+        var html = `
+            <div style="background:#f8fafc; padding:24px; border-radius:20px; border:1px solid #e2e8f0; margin-bottom:24px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div><span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">GELİŞ UÇUŞU</span><div style="font-weight:700;">${bookingData.flightIn}</div></div>
+                    ${bookingData.flightOut ? `<div><span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">DÖNÜŞ UÇUŞU</span><div style="font-weight:700;">${bookingData.flightOut}</div></div>` : ''}
+                </div>
+                <div style="margin-top:16px; padding-top:16px; border-top:1px solid #e2e8f0;">
+                    <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">YOLCULAR</span>
+                    <div style="font-size:0.9rem; font-weight:600;">${bookingData.passengers.join(', ')}</div>
+                </div>
+                <div style="margin-top:16px; padding:16px; background:var(--accent); border-radius:14px; color:white; text-align:center;">
+                    <div style="font-size:0.8rem; opacity:0.8;">Toplam Tutar</div>
+                    <div style="font-size:1.8rem; font-weight:900;">${priceStr}</div>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <button onclick="sendWhatsApp()" style="background:#25D366; color:white; border:none; padding:18px; border-radius:16px; font-weight:800; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fab fa-whatsapp" style="font-size:1.2rem;"></i> WhatsApp</button>
+                <button onclick="sendEmail()" style="background:var(--accent); color:white; border:none; padding:18px; border-radius:16px; font-weight:800; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fas fa-envelope" style="font-size:1.1rem;"></i> E-Posta</button>
+            </div>
+        `;
+        document.getElementById('modalBody').innerHTML = html;
+    }
+
+    function generateMessage() {
+        var c = getCurrency();
+        var total = bookingData.route ? (bookingData.trip === 'round_trip' ? bookingData.route.price * 2 : bookingData.route.price) : 'Fiyat Sorunuz';
+        var msg = `*YENİ REZERVASYON TALEBİ*\n\n`;
+        msg += `*Rota:* ${bookingData.airport} ➔ ${bookingData.district}\n`;
+        msg += `*Tarih:* ${bookingData.date}\n`;
+        msg += `*Tip:* ${bookingData.trip === 'round_trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}\n`;
+        msg += `*Yolcu:* ${bookingData.pax} Kişi\n`;
+        msg += `*Yolcu İsimleri:* ${bookingData.passengers.join(', ')}\n`;
+        msg += `*Uçuş Kodu (Geliş):* ${bookingData.flightIn}\n`;
+        if(bookingData.flightOut) msg += `*Uçuş Kodu (Dönüş):* ${bookingData.flightOut}\n`;
+        msg += `*İletişim:* ${bookingData.tel}\n\n`;
+        msg += `*TOPLAM TUTAR:* ${bookingData.route ? c+total : total}\n\n`;
+        msg += `Lütfen onaylayınız.`;
+        return msg;
+    }
+
+    function sendWhatsApp() {
+        var d = loadSiteData();
+        var wa = (d && d.whatsapp) ? d.whatsapp : '905000000000';
+        var msg = generateMessage();
+        window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent(msg), '_blank');
+    }
+
+    function sendEmail() {
+        var d = loadSiteData();
+        var email = (d && d.email) ? d.email : 'destek@protrans.com';
+        var msg = generateMessage();
+        var subject = `Transfer Rezervasyonu - ${bookingData.airport} > ${bookingData.district}`;
+        window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function updateStepIndicator(step) {
+        var dots = document.querySelectorAll('.step-dot');
+        dots.forEach((dot, i) => dot.classList.toggle('active', i < step));
+    }
+
+    function applySiteData() {
+        var data = loadSiteData();
+        if(!data) return;
+        var c = getCurrency();
+        
+        if(document.getElementById('footerPhone')) document.getElementById('footerPhone').innerHTML = `<i class="fas fa-phone" style="color:var(--accent); margin-right:8px;"></i> ${data.phone}`;
+        if(document.getElementById('footerEmail')) document.getElementById('footerEmail').innerHTML = `<i class="fas fa-envelope" style="color:var(--accent); margin-right:8px;"></i> ${data.email}`;
+        if(document.getElementById('footerLocation')) document.getElementById('footerLocation').innerHTML = `<i class="fas fa-map-marker-alt" style="color:var(--accent); margin-right:8px;"></i> ${data.location}`;
+
+        var grid = document.getElementById('fleetGrid');
+        if(grid) {
+            var h = '';
+            if(data.vitoEnabled !== false) h += `
+                <div class="fleet-card">
+                    <div class="fleet-visual"><img src="/pro-package/images/vito.png" style="width:100%; height:100%; object-fit:cover;"> <span class="fleet-badge">VİP</span></div>
+                    <div class="fleet-details">
+                        <h3>Mercedes Vito VIP</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Özel tasarım VIP iç kabin ve geniş bagaj alanı.</p>
+                        <div class="fleet-specs"><span class="spec"><i class="fas fa-users"></i> 7 Yolcu</span><span class="spec"><i class="fas fa-snowflake"></i> Klima</span></div>
+                        <div class="fleet-price">${c}${data.vitoPrice || 850}'den</div>
+                    </div>
+                </div>`;
+            if(data.sprinterEnabled !== false) h += `
+                <div class="fleet-card">
+                    <div class="fleet-visual"><img src="/pro-package/images/sprinter.png" style="width:100%; height:100%; object-fit:cover;"> <span class="fleet-badge">Grup</span></div>
+                    <div class="fleet-details">
+                        <h3>Mercedes Sprinter VIP</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Büyük gruplar için 12 kişilik konforlu transfer.</p>
+                        <div class="fleet-specs"><span class="spec"><i class="fas fa-users"></i> 12 Yolcu</span><span class="spec"><i class="fas fa-suitcase"></i> Bagaj</span></div>
+                        <div class="fleet-price">${c}${data.sprinterPrice || 1500}'den</div>
+                    </div>
+                </div>`;
+            grid.innerHTML = h;
+        }
+
+        var rg = document.getElementById('routesGrid');
+        if(rg && data.routes) {
+            rg.innerHTML = data.routes.map(r => `
+                <div class="route-card">
+                    <div class="route-info"><h3>${r.airport} → ${r.location}</h3><p>${r.duration} | MB ${r.vehicle}</p></div>
+                    <div class="price-tag">${c}${r.price}</div>
+                </div>
+            `).join('');
+        }
+    }
+
+    populateDropdowns();
+    applySiteData();
+    switchLang('tr');
+    </script>
+</body>
+</html>
+

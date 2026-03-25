@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EliteDrive | Exclusive Airport VIP Transfers</title>
+    <link rel="stylesheet" href="/premium-package/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .animate-pulse-slow { animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1.05); } 50% { opacity: 0.8; transform: scale(1); } }
+        .h-font { font-family: 'Outfit', sans-serif; }
+        .trip-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .active-step { border-color: #3b82f6 !important; color: #0f172a !important; font-weight: 800; }
+    </style>
+</head>
+<body class="bg-slate-50 overflow-x-hidden antialiased font-['Plus_Jakarta_Sans']">
+    <!-- Header -->
+    <nav class="fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 py-6" id="mainNav">
+        <div class="container mx-auto px-6">
+            <div class="flex justify-between items-center bg-white/70 backdrop-blur-2xl rounded-[24px] px-8 py-4 shadow-xl shadow-black/5 border border-white/20">
+                <div class="flex items-center gap-3 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                    <div class="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-all">
+                        <i class="fas fa-car-side text-white"></i>
+                    </div>
+                    <span class="text-xl font-black h-font tracking-tighter text-slate-900 uppercase">ELITE<span class="text-blue-600">DRIVE</span></span>
+                </div>
+                
+                <ul class="hidden lg:flex gap-10 list-none font-bold text-[13px] tracking-wide text-slate-600">
+                    <li><a href="#" class="hover:text-blue-600 transition-colors">Ana Sayfa</a></li>
+                    <li><a href="#features" class="hover:text-blue-600 transition-colors">Hizmetler</a></li>
+                    <li><a href="#fleet" class="hover:text-blue-600 transition-colors">Filo</a></li>
+                    <li><a href="#contact" class="hover:text-blue-600 transition-colors">İletişim</a></li>
+                </ul>
+
+                <button class="bg-slate-900 text-white px-8 py-3.5 rounded-full font-bold text-[11px] tracking-widest hover:bg-blue-600 transition-all uppercase" onclick="document.getElementById('booking').scrollIntoView({behavior:'smooth'})">
+                    Rezervasyon
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="min-h-screen relative flex items-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="/premium-package/images/hero.png" class="w-full h-full object-cover brightness-[0.4] animate-pulse-slow">
+            <div class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent"></div>
+        </div>
+
+        <div class="container mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center px-6 pt-20">
+            <div class="text-white">
+                <div class="inline-flex items-center gap-3 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 mb-8 tracking-widest text-[10px] uppercase font-black italic">
+                    <span class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></span> Exclusive VIP Concept
+                </div>
+                <h1 class="text-6xl lg:text-7xl font-black h-font leading-[1] mb-8 tracking-tighter">
+                    Asaleti <br/> <span class="text-blue-500">Yolda</span> Hissedin.
+                </h1>
+                <p class="text-slate-300 text-lg max-w-lg mb-10 leading-relaxed font-medium">
+                    En yüksek segment araç koleksiyonumuz ve kusursuz servis anlayışımızla havalimanı transferinde yeni bir çağ başlatıyoruz.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <button class="bg-blue-600 text-white px-10 py-5 rounded-2xl font-black text-sm hover:bg-blue-700 shadow-2xl shadow-blue-600/30 transition-all uppercase tracking-wide" onclick="document.getElementById('fleet').scrollIntoView({behavior:'smooth'})">FİLOYU KEŞFET</button>
+                    <button class="bg-white/5 backdrop-blur-md border border-white/10 text-white px-10 py-5 rounded-2xl font-black text-sm hover:bg-white/10 transition-all uppercase tracking-wide" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">BİZE ULAŞIN</button>
+                </div>
+            </div>
+
+            <!-- Booking Widget -->
+            <div class="bg-white p-10 rounded-[40px] shadow-2xl border border-slate-100" id="booking">
+                <div class="flex gap-4 mb-8">
+                    <button class="trip-btn flex-1 py-3.5 rounded-2xl border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest active transition-all" onclick="setTripType('one', this)">Tek Yön</button>
+                    <button class="trip-btn flex-1 py-3.5 rounded-2xl border-2 border-slate-100 text-[10px] font-black uppercase tracking-widest transition-all" onclick="setTripType('round', this)">Gidiş-Dönüş</button>
+                </div>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">KALKIŞ NOKTASI</label>
+                        <select id="selFrom" class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900 transition-all" onchange="validatePositions()"></select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">VARALACAK NOKTA</label>
+                        <select id="selTo" class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900 transition-all" onchange="validatePositions()"></select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">TRANSFER TARİHİ</label>
+                            <input type="date" id="selDate" class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">SAAT</label>
+                            <input type="time" id="selTime" class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">ÖZEL YOLCU SAYISI</label>
+                        <select id="selPax" class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900">
+                            <option value="1">1 Yolcu</option>
+                            <option value="2">2 Yolcu</option>
+                            <option value="3">3 Yolcu</option>
+                            <option value="4">4 Yolcu</option>
+                            <option value="5">5 Yolcu</option>
+                            <option value="6">6 Yolcu</option>
+                            <option value="7">7+ Yolcu</option>
+                        </select>
+                    </div>
+                    <button class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black tracking-widest text-sm hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10 mt-2 uppercase" onclick="launchBooking()">Uygun Araçları Listele</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Services -->
+    <section class="py-32 bg-white" id="features">
+        <div class="container mx-auto px-6">
+            <div class="max-w-xl mb-20">
+                <h6 class="text-blue-600 font-black text-xs tracking-widest uppercase mb-4">Servis Kalitesi</h6>
+                <h2 class="text-4xl lg:text-5xl font-black h-font text-slate-900 tracking-tighter leading-tight">EliteDrive Ayrıcalıkları</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-12">
+                <div class="bg-slate-50 p-12 rounded-[40px] border border-slate-100 group hover:shadow-2xl transition-all duration-500">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-10 shadow-xl shadow-blue-500/30 group-hover:rotate-12 transition-transform">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <h4 class="text-2xl font-black h-font mb-6">Ultra Lüks Konsept</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">Buzdolabı, Apple TV, Play Station ve tam deri koltuklarla donatılmış VIP araçlar.</p>
+                </div>
+                <div class="bg-slate-50 p-12 rounded-[40px] border border-slate-100 group hover:shadow-2xl transition-all duration-500">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-10 shadow-xl shadow-blue-500/30 group-hover:rotate-12 transition-transform">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h4 class="text-2xl font-black h-font mb-6">Concierge Hizmeti</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">Özel eğitimli asistan ve şoför ekibimizle valiz taşıma ve havalimanı eskortluğu.</p>
+                </div>
+                <div class="bg-slate-50 p-12 rounded-[40px] border border-slate-100 group hover:shadow-2xl transition-all duration-500">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-10 shadow-xl shadow-blue-500/30 group-hover:rotate-12 transition-transform">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4 class="text-2xl font-black h-font mb-6">Tam Güvence</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">Koltuk sigortası, kurumsal fatura desteği ve anlık araç takibi ile güven dolu yolculuk.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fleet -->
+    <section class="py-32 bg-slate-50" id="fleet">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-black h-font text-center text-slate-900 tracking-tighter mb-20">Elite Koleksiyonumuz</h2>
+            <div class="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto" id="fleetDisplay"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-white py-24" id="contact">
+        <div class="container mx-auto px-6 grid md:grid-cols-4 gap-16 border-b border-white/5 pb-20 mb-12">
+            <div class="col-span-1">
+                <h2 class="text-2xl font-black h-font tracking-tighter uppercase mb-6">ELITE<span class="text-blue-500">DRIVE</span></h2>
+                <p class="text-slate-400 text-sm leading-relaxed">Luxury travel, simplified and elevated. Your journey starts with us.</p>
+            </div>
+            <div>
+                 <h5 class="text-blue-500 font-black text-[10px] tracking-widest uppercase mb-8">İletişim Kanalları</h5>
+                 <p id="fPhone" class="text-lg font-bold mb-1"></p>
+                 <p id="fMail" class="text-slate-400 text-sm mb-4"></p>
+                 <a href="/premium-package/admin.html" class="text-[10px] font-black tracking-widest text-slate-600 hover:text-blue-500 uppercase flex items-center gap-2 transition-colors"><i class="fas fa-shield-lock"></i> Yönetim Portalı</a>
+            </div>
+            <div>
+                 <h5 class="text-blue-500 font-black text-[10px] tracking-widest uppercase mb-8">Kurumsal</h5>
+                 <ul class="text-slate-400 text-xs font-bold uppercase tracking-widest space-y-4 list-none">
+                     <li><a href="#" class="hover:text-white transition-colors">Hizmet Politikası</a></li>
+                     <li><a href="#" class="hover:text-white transition-colors">KVKK Aydınlatma</a></li>
+                 </ul>
+            </div>
+            <div>
+                <h5 class="text-blue-500 font-black text-[10px] tracking-widest uppercase mb-8">Sosyal Medya</h5>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"><i class="fab fa-facebook-f text-sm"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="container mx-auto px-6 text-center text-[10px] font-black tracking-widest text-slate-700 uppercase italic">
+            © 2026 EliteDrive Luxury Transfers. Handcrafted for Excellence.
+        </div>
+    </footer>
+
+    <!-- Multistep Modal -->
+    <div class="fixed inset-0 z-[2000] bg-slate-950/80 backdrop-blur-2xl hidden items-center justify-center p-6" id="modalBookingOverlay">
+        <div class="bg-white w-full max-w-3xl rounded-[40px] shadow-2xl overflow-hidden relative animate-in zoom-in duration-500">
+            <div class="flex bg-slate-50 border-b">
+                <div class="flex-1 py-6 text-center border-b-[4px] border-transparent font-black text-[10px] tracking-widest text-slate-400 uppercase" id="st1-modal">Araç</div>
+                <div class="flex-1 py-6 text-center border-b-[4px] border-transparent font-black text-[10px] tracking-widest text-slate-400 uppercase" id="st2-modal">Yolcular</div>
+                <div class="flex-1 py-6 text-center border-b-[4px] border-transparent font-black text-[10px] tracking-widest text-slate-400 uppercase" id="st3-modal">Ödeme</div>
+                <div class="flex-1 py-6 text-center border-b-[4px] border-transparent font-black text-[10px] tracking-widest text-slate-400 uppercase" id="st4-modal">Onay</div>
+            </div>
+            <div class="p-10 max-h-[70vh] overflow-y-auto" id="modalBody"></div>
+            <button onclick="closeM()" class="absolute top-6 right-8 text-slate-300 hover:text-red-500 text-3xl transition-all">&times;</button>
+        </div>
+    </div>
+
+    <!-- Admin FAB -->
+    <a href="/premium-package/admin.html" class="fixed bottom-8 right-8 w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:bg-blue-600 transition-all z-50 group" title="Panel"><i class="fas fa-cog group-hover:rotate-90 transition-transform"></i></a>
+
+    <script>
+        var eliteData = { 
+            airports: ['İstanbul Havalimanı (IST)', 'Sabiha Gökçen (SAW)'], 
+            districts: ['Sultanahmet', 'Taksim', 'Beşiktaş', 'Kadıköy', 'Şişli'], 
+            routes: [], currency: '₺', vitoEnabled: true, sprinterEnabled: true, 
+            vitoPrice: 1200, sprinterPrice: 2000, whatsapp: '905550000000', 
+            email: 'info@elitedrive.com', phone: '+90 555 000 00 00', reservations: []
+        };
+        var booking = { from:'', to:'', date:'', time:'', type:'Tek Yön', pax:1, car:null, names:[], tel:'', flight:'' };
+
+        function load() {
+            var raw = localStorage.getItem('eliteAdminData');
+            if(raw) eliteData = JSON.parse(raw);
+            else localStorage.setItem('eliteAdminData', JSON.stringify(eliteData));
+            syncUI();
+        }
+
+        function setTripType(t, btn) {
+            booking.type = (t === 'one' ? 'Tek Yön' : 'Gidiş-Dönüş');
+            document.querySelectorAll('.trip-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function syncUI() {
+            const sels = [document.getElementById('selFrom'), document.getElementById('selTo')];
+            const items = [...eliteData.airports, ...eliteData.districts];
+            sels.forEach(s => {
+                const cur = s.value;
+                s.innerHTML = '<option value="" disabled selected>Nokta Seçiniz</option>' + items.map(i => `<option value="${i}">${i}</option>`).join('');
+                if(cur) s.value = cur;
+            });
+
+            const fg = document.getElementById('fleetDisplay');
+            fg.innerHTML = "";
+            if(eliteData.vitoEnabled) fg.innerHTML += renderCarCard('Mercedes Vito VIP', '7 Yolcu', '5 Bagaj', eliteData.vitoPrice, '/premium-package/images/vito.png', 'BUSINESS');
+            if(eliteData.sprinterEnabled) fg.innerHTML += renderCarCard('Mercedes Sprinter', '13 Yolcu', '10 Bagaj', eliteData.sprinterPrice, '/premium-package/images/sprinter.png', 'VAN');
+
+            document.getElementById('fPhone').textContent = eliteData.phone;
+            document.getElementById('fMail').textContent = eliteData.email;
+        }
+
+        function renderCarCard(t, p, b, pr, img, cat) {
+            return `
+                <div class="bg-white rounded-[40px] overflow-hidden border border-slate-100 group hover:shadow-2xl transition-all">
+                    <div class="h-64 flex items-center justify-center p-12 relative bg-slate-50">
+                        <span class="absolute top-8 left-10 text-[8px] font-black tracking-widest text-slate-300 uppercase">${cat} LINE</span>
+                        <img src="${img}" class="h-full object-contain filter drop-shadow-2xl group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute bottom-6 right-10 bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-black text-xl">${eliteData.currency}${pr}</div>
+                    </div>
+                    <div class="p-10">
+                        <h4 class="text-3xl font-black h-font text-slate-900 mb-6 uppercase tracking-tight">${t}</h4>
+                        <div class="flex gap-8 border-t border-slate-50 pt-8">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-users text-blue-600"></i> ${p}</span>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-suitcase text-blue-600"></i> ${b}</span>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function validatePositions() {
+            const f = document.getElementById('selFrom').value;
+            const t = document.getElementById('selTo').value;
+            if(!f || !t) return;
+            if(f === t) { alert("Noktalar aynı olamaz."); document.getElementById('selTo').value = ""; return; }
+            if(!eliteData.airports.includes(f) && !eliteData.airports.includes(t)) {
+                alert("Uyarı: En az bir nokta Havalimanı olmalıdır.");
+                document.getElementById('selTo').value = "";
+            }
+        }
+
+        function launchBooking() {
+            booking = { ...booking, from: document.getElementById('selFrom').value, to: document.getElementById('selTo').value, date: document.getElementById('selDate').value, time: document.getElementById('selTime').value, pax: parseInt(document.getElementById('selPax').value) };
+            if(!booking.from || !booking.to || !booking.date || !booking.time) return alert("Hatalı giriş, lütfen tüm alanları seçin.");
+            document.getElementById('modalBookingOverlay').style.display = 'flex';
+            renderStage1();
+        }
+
+        function renderStage1() {
+            updateStepHeader(1);
+            const found = eliteData.routes.find(r => (r.airport === booking.from && r.location === booking.to) || (r.location === booking.from && r.airport === booking.to));
+            let vp = found ? found.price : eliteData.vitoPrice;
+            let sp = found ? found.price + 500 : eliteData.sprinterPrice;
+            if(booking.type === 'Gidiş-Dönüş') { vp = Math.round(vp * 1.8); sp = Math.round(sp * 1.8); }
+            
+            document.getElementById('modalBody').innerHTML = `
+                <h3 class="text-2xl font-black h-font text-slate-900 text-center mb-10">Elite Sürüş Paketinizi Seçin</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-10 rounded-[32px] border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all group" onclick="setCar('Vito', ${vp})">
+                        <img src="/premium-package/images/vito.png" class="h-32 object-contain mx-auto mb-8 group-hover:scale-110 transition-transform">
+                        <h4 class="text-center font-black h-font text-xl uppercase tracking-widest text-slate-700">Vito VIP 7+1</h4>
+                        <p class="text-center text-blue-600 font-extrabold text-2xl mt-3">${eliteData.currency}${vp}</p>
+                    </div>
+                    <div class="bg-slate-50 p-10 rounded-[32px] border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all group" onclick="setCar('Sprinter', ${sp})">
+                        <img src="/premium-package/images/sprinter.png" class="h-32 object-contain mx-auto mb-8 group-hover:scale-110 transition-transform">
+                        <h4 class="text-center font-black h-font text-xl uppercase tracking-widest text-slate-700">Sprinter 13+1</h4>
+                        <p class="text-center text-blue-600 font-extrabold text-2xl mt-3">${eliteData.currency}${sp}</p>
+                    </div>
+                </div>`;
+        }
+
+        function setCar(t, p) { booking.car = { type:t, price:p }; renderStage2(); }
+
+        function renderStage2() {
+            updateStepHeader(2);
+            let nameInputs = "";
+            for(let i=1; i<=booking.pax; i++) {
+                nameInputs += `
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">${i}. YOLCU AD SOYAD</label>
+                        <input type="text" class="p-input w-full bg-slate-50 p-4 rounded-xl outline-none font-bold focus:bg-white border focus:border-blue-200" placeholder="Tam adınızı giriniz">
+                    </div>`;
+            }
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="max-w-md mx-auto space-y-6">
+                    <h3 class="text-2xl font-black h-font text-slate-900 text-center mb-2">Yolcu Detayları</h3>
+                    <p class="text-xs text-slate-400 text-center mb-8 uppercase font-bold tracking-widest border-b pb-4">Seyahat edecek tüm yolcuları belirtiniz</p>
+                    ${nameInputs}
+                    <div class="grid grid-cols-1 gap-6 pt-4">
+                        <div><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">UÇUŞ KODU</label><input type="text" id="mFlight" class="w-full bg-slate-50 p-4 rounded-xl outline-none font-bold border focus:bg-white focus:border-blue-200" placeholder="Örn: TK123"></div>
+                        <div><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">İLETİŞİM GSM</label><input type="tel" id="mTel" class="w-full bg-slate-50 p-4 rounded-xl outline-none font-bold border focus:bg-white focus:border-blue-200" placeholder="+90 5XX"></div>
+                    </div>
+                    <button class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-xs tracking-widest mt-8 hover:bg-blue-600 shadow-xl transition-all" onclick="validateStage2()">ÖDEME ADIMINA GEÇ</button>
+                </div>`;
+        }
+
+        function validateStage2() {
+            const inputs = document.querySelectorAll('.p-input');
+            const names = [];
+            let err = false;
+            inputs.forEach(i => { if(!i.value) err = true; names.push(i.value); });
+            booking.flight = document.getElementById('mFlight').value;
+            booking.tel = document.getElementById('mTel').value;
+            if(err || !booking.flight || !booking.tel) return alert("Lütfen tüm yolcu bilgilerini ve iletişim detaylarını eksiksiz doldurun.");
+            booking.names = names;
+            renderStage3();
+        }
+
+        function renderStage3() {
+            updateStepHeader(3);
+            document.getElementById('modalBody').innerHTML = `
+                <div class="max-w-md mx-auto space-y-8">
+                    <div class="text-center">
+                        <h3 class="text-3xl font-black h-font text-slate-900 mb-2">Güvenli Ödeme</h3>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mastercard / Visa VIP Gateway</p>
+                    </div>
+                    <div class="bg-slate-900 p-8 rounded-[32px] text-white shadow-2xl relative overflow-hidden">
+                        <i class="fas fa-credit-card absolute top-8 right-8 opacity-20 text-6xl"></i>
+                        <div class="mb-8"><p class="text-[10px] font-bold opacity-60 uppercase mb-2">Kart Sahibi</p><input type="text" class="bg-transparent border-b border-white/20 w-full outline-none font-black text-xl placeholder-white/30" placeholder="AD SOYAD"></div>
+                        <div class="mb-8"><p class="text-[10px] font-bold opacity-60 uppercase mb-2">Kart Numarası</p><input type="text" class="bg-transparent border-b border-white/20 w-full outline-none font-black text-xl placeholder-white/30" placeholder="0000 0000 0000 0000"></div>
+                        <div class="flex gap-8">
+                             <div class="flex-1"><p class="text-[10px] font-bold opacity-60 uppercase mb-2">Son Kullanma</p><input type="text" class="bg-transparent border-b border-white/20 w-full outline-none font-black text-xl placeholder-white/30" placeholder="AA/YY"></div>
+                             <div class="w-24"><p class="text-[10px] font-bold opacity-60 uppercase mb-2">CVV</p><input type="text" class="bg-transparent border-b border-white/20 w-full outline-none font-black text-xl placeholder-white/30" placeholder="***"></div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-2xl border flex justify-between items-center">
+                        <span class="font-bold text-slate-500">ÖDENECEK TUTAR:</span>
+                        <span class="text-2xl font-black text-slate-900">${eliteData.currency}${booking.car.price}</span>
+                    </div>
+                    <button class="w-full py-6 bg-blue-600 text-white rounded-[24px] font-black text-sm tracking-widest shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all uppercase" onclick="confirmReservation()">Ödemeyi Tamamla ve Onayla</button>
+                    <p class="text-[9px] text-slate-400 text-center font-bold px-4 uppercase leading-relaxed">Kart bilgileriniz uçtan uca şifrelenir ve EliteDrive VIP koruması altındadır. Fake POS entegrasyonu aktiftir.</p>
+                </div>`;
+        }
+
+        function confirmReservation() {
+            // Save to localStorage
+            const newRes = {
+                id: Math.floor(1000 + Math.random() * 9000).toString(),
+                name: booking.names[0] + (booking.pax > 1 ? ` (+${booking.pax - 1} Yolcu)` : ''),
+                phone: booking.tel,
+                from: booking.from,
+                to: booking.to,
+                date: booking.date,
+                time: booking.time,
+                vehicle: booking.car.type + ' VIP',
+                price: booking.car.price,
+                status: 'Onaylandı'
+            };
+            
+            eliteData.reservations = [newRes, ...(eliteData.reservations || [])];
+            localStorage.setItem('eliteAdminData', JSON.stringify(eliteData));
+            
+            renderStage4();
+        }
+
+        function renderStage4() {
+            updateStepHeader(4);
+            document.getElementById('modalBody').innerHTML = `
+                <div class="text-center animate-in fade-in duration-1000">
+                    <div class="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-8 shadow-inner"><i class="fas fa-check-circle"></i></div>
+                    <h2 class="h-font text-4xl font-black text-slate-900 mb-6 tracking-tighter uppercase">Rezervasyon Başarılı!</h2>
+                    <p class="text-slate-500 font-medium max-w-sm mx-auto mb-10 leading-relaxed uppercase text-xs tracking-widest">Ödemeniz onaylandı ve uçuşunuz takibe alındı. EliteDrive VIP ekipleri sizi karşılamak için hazır.</p>
+                    
+                    <div class="bg-slate-50 rounded-[40px] p-10 text-left border border-slate-100 grid md:grid-cols-2 gap-x-10 gap-y-8 mb-10 shadow-inner">
+                        <div><small class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">PROGRAM</small><p class="font-bold text-slate-700 uppercase">${booking.type}</p></div>
+                        <div><small class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">YOLCULAR</small><p class="font-bold text-slate-700">${booking.names.join(', ')}</p></div>
+                        <div><small class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">GÜZERGAH</small><p class="font-bold text-slate-700">${booking.from} ➔ ${booking.to}</p></div>
+                        <div><small class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">TOPLAM ÜCRET</small><p class="text-2xl font-black text-blue-600">${eliteData.currency}${booking.car.price}</p></div>
+                    </div>
+                    
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Detaylı bilgi ve bildirim almak için;</p>
+                    <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                        <button class="py-5 bg-[#25D366] text-white rounded-2xl font-black text-xs tracking-widest shadow-xl shadow-green-500/20 hover:brightness-110 flex items-center justify-center gap-3" onclick="finalNotify('wa')"><i class="fab fa-whatsapp text-lg"></i> WHATSAPP</button>
+                        <button class="py-5 bg-slate-900 text-white rounded-2xl font-black text-xs tracking-widest shadow-xl shadow-slate-900/20 hover:bg-blue-600 flex items-center justify-center gap-3" onclick="finalNotify('mail')"><i class="fas fa-envelope text-lg"></i> E-POSTA</button>
+                    </div>
+                </div>`;
+        }
+
+        function finalNotify(m) {
+            let msg = `*ELITEDRIVE REZERVASYON ONAYI*\n\nTip: ${booking.type}\nYolcular: ${booking.names.join(', ')}\nRota: ${booking.from} -> ${booking.to}\nTarih: ${booking.date} / ${booking.time}\nAraç: ${booking.car.type}\nUçuş: ${booking.flight}\nİletişim: ${booking.tel}\nDurum: Ödeme Alındı\nTotal: ${eliteData.currency}${booking.car.price}`;
+            if(m === 'wa') window.open(`https://wa.me/${eliteData.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+            else window.open(`mailto:${eliteData.email}?subject=Transfer Rezervasyonu Onayı&body=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function updateStepHeader(s) {
+            document.querySelectorAll('#modalBookingOverlay .flex-1').forEach((el, i) => (i+1 === s) ? el.classList.add('active-step') : el.classList.remove('active-step'));
+        }
+
+        function closeM() { document.getElementById('modalBookingOverlay').style.display = 'none'; }
+        
+        window.onscroll = function() {
+            var n = document.getElementById('mainNav');
+            if(window.scrollY > 50) n.classList.add('px-4 py-2 mt-4').querySelector('.container > div').classList.add('shadow-2xl border-slate-200 bg-white/95');
+            else n.classList.remove('px-4 py-2 mt-4').querySelector('.container > div').classList.remove('shadow-2xl border-slate-200 bg-white/95');
+        };
+
+        window.addEventListener('load', load);
+    </script>
+</body>
+</html>

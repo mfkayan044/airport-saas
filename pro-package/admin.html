@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTrans Admin | Yönetim Paneli</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#f1f5f9; color:#1e293b; display:flex; min-height:100vh; }
+
+    .sidebar { width:260px; background:#0f172a; color:white; display:flex; flex-direction:column; position:fixed; top:0; bottom:0; left:0; z-index:100; }
+    .sidebar-brand { padding:28px 24px; border-bottom:1px solid #1e293b; }
+    .sidebar-brand h2 { font-size:1.2rem; font-weight:800; }
+    .sidebar-brand h2 span { color:#3b82f6; }
+    .sidebar-brand p { font-size:0.7rem; color:#64748b; margin-top:4px; text-transform:uppercase; letter-spacing:2px; }
+    .sidebar-nav { flex:1; padding:16px 12px; overflow-y:auto; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; cursor:pointer; transition:0.2s; color:#94a3b8; font-weight:500; font-size:0.88rem; margin-bottom:4px; border:none; background:none; width:100%; text-align:left; font-family:inherit; }
+    .nav-item:hover { background:#1e293b; color:white; }
+    .nav-item.active { background:#3b82f6; color:white; box-shadow:0 4px 12px rgba(59,130,246,0.3); }
+    .nav-item i { width:20px; text-align:center; font-size:0.95rem; }
+    .sidebar-footer { padding:16px 12px; border-top:1px solid #1e293b; }
+    .sidebar-footer a { color:#64748b; text-decoration:none; font-size:0.85rem; display:flex; align-items:center; gap:8px; }
+    .sidebar-footer a:hover { color:#3b82f6; }
+
+    .main { margin-left:260px; flex:1; padding:32px; }
+    .page-header { margin-bottom:32px; }
+    .page-header h1 { font-size:1.8rem; font-weight:800; color:#0f172a; }
+    .page-header p { color:#64748b; font-size:0.92rem; margin-top:4px; }
+
+    .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:32px; }
+    .stat-card { background:white; border-radius:16px; padding:24px; border:1px solid #e2e8f0; transition:0.2s; }
+    .stat-card:hover { box-shadow:0 8px 24px rgba(0,0,0,0.06); transform:translateY(-2px); }
+    .stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; margin-bottom:16px; }
+    .stat-value { font-size:2rem; font-weight:800; color:#0f172a; }
+    .stat-label { font-size:0.82rem; color:#64748b; margin-top:4px; font-weight:500; }
+
+    .panel { background:white; border-radius:16px; border:1px solid #e2e8f0; margin-bottom:24px; overflow:hidden; }
+    .panel-header { padding:24px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; }
+    .panel-header h3 { font-size:1.1rem; font-weight:700; }
+    .panel-body { padding:24px; }
+
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:12px 16px; font-size:0.72rem; text-transform:uppercase; letter-spacing:1px; color:#64748b; font-weight:700; background:#f8fafc; border-bottom:2px solid #e2e8f0; }
+    td { padding:14px 16px; border-bottom:1px solid #f1f5f9; font-size:0.88rem; }
+    tr:hover { background:#f8fafc; }
+
+    .btn { padding:10px 20px; border-radius:10px; font-weight:700; border:none; cursor:pointer; font-size:0.82rem; font-family:inherit; transition:0.2s; display:inline-flex; align-items:center; gap:8px; }
+    .btn-primary { background:#3b82f6; color:white; }
+    .btn-primary:hover { background:#2563eb; box-shadow:0 4px 12px rgba(59,130,246,0.3); }
+    .btn-success { background:#10b981; color:white; }
+    .btn-success:hover { background:#059669; }
+    .btn-danger { background:#ef4444; color:white; }
+    .btn-danger:hover { background:#dc2626; }
+    .btn-sm { padding:6px 12px; font-size:0.78rem; border-radius:8px; }
+    .btn-ghost { background:#f1f5f9; color:#334155; }
+
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-size:0.78rem; font-weight:700; color:#334155; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+    .form-input { width:100%; padding:12px 14px; border:2px solid #e2e8f0; border-radius:10px; font-family:inherit; font-size:0.88rem; transition:0.2s; }
+    .form-input:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.08); }
+    select.form-input { cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+    textarea.form-input { resize:vertical; min-height:80px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-check { display:flex; align-items:center; gap:10px; padding:12px; background:#f8fafc; border-radius:10px; cursor:pointer; }
+    .form-check input { width:18px; height:18px; accent-color:#3b82f6; }
+
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    .badge { padding:4px 10px; border-radius:6px; font-size:0.72rem; font-weight:700; }
+    .badge-green { background:#d1fae5; color:#065f46; }
+    .badge-blue { background:#dbeafe; color:#1e40af; }
+    .badge-red { background:#fee2e2; color:#991b1b; }
+
+    .toast { position:fixed; bottom:32px; right:32px; background:#10b981; color:white; padding:16px 24px; border-radius:12px; font-weight:700; box-shadow:0 8px 24px rgba(16,185,129,0.3); display:none; z-index:9999; animation:slideUp 0.3s; }
+    @keyframes slideUp { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+
+    .tag { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; background:#f1f5f9; border-radius:8px; font-size:0.82rem; font-weight:600; margin:4px; }
+    .tag .remove { cursor:pointer; color:#ef4444; font-weight:800; font-size:0.9rem; }
+
+    @media(max-width:1024px) { .stat-grid { grid-template-columns:1fr 1fr; } }
+    @media(max-width:768px) { .sidebar { width:70px; } .sidebar-brand h2,.sidebar-brand p,.nav-item span,.sidebar-footer span { display:none; } .main { margin-left:70px; } .stat-grid { grid-template-columns:1fr; } .form-row { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Pro<span>Trans</span></h2>
+            <p>Admin Panel</p>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" onclick="showTab('dashboard',this)"><i class="fas fa-chart-pie"></i><span>Panel Özeti</span></button>
+            <button class="nav-item" onclick="showTab('locations',this)"><i class="fas fa-map-signs"></i><span>Lokasyonlar</span></button>
+            <button class="nav-item" onclick="showTab('routes',this)"><i class="fas fa-route"></i><span>Güzergahlar & Fiyat</span></button>
+            <button class="nav-item" onclick="showTab('fleet',this)"><i class="fas fa-shuttle-van"></i><span>Araç Filosu</span></button>
+            <button class="nav-item" onclick="showTab('reviews',this)"><i class="fas fa-comments"></i><span>Müşteri Yorumları</span></button>
+            <button class="nav-item" onclick="showTab('contact',this)"><i class="fas fa-phone-alt"></i><span>İletişim Bilgileri</span></button>
+            <button class="nav-item" onclick="showTab('settings',this)"><i class="fas fa-cog"></i><span>Genel Ayarlar</span></button>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/pro-package/index.html"><i class="fas fa-external-link-alt"></i> <span>Siteye Git</span></a>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <!-- DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content active">
+            <div class="page-header">
+                <h1>Panel Özeti</h1>
+                <p>Sitenizin anlık durumunu buradan takip edin.</p>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i class="fas fa-road"></i></div>
+                    <div class="stat-value" id="statRoutes">0</div>
+                    <div class="stat-label">Aktif Güzergah</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#d1fae5;color:#059669;"><i class="fas fa-shuttle-van"></i></div>
+                    <div class="stat-value" id="statVehicles">0</div>
+                    <div class="stat-label">Aktif Araç</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-star"></i></div>
+                    <div class="stat-value" id="statReviews">0</div>
+                    <div class="stat-label">Müşteri Yorumu</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-coins"></i></div>
+                    <div class="stat-value" id="statAvgPrice">0</div>
+                    <div class="stat-label">Ort. Fiyat</div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><h3>Son Eklenen Güzergahlar</h3></div>
+                <div class="panel-body" id="dashboardRoutes"></div>
+            </div>
+        </div>
+
+        <!-- LOCATIONS -->
+        <div id="tab-locations" class="tab-content">
+            <div class="page-header">
+                <h1>Lokasyon Yönetimi</h1>
+                <p>Havalimanları ve ilçe/bölgeleri yönetin. Güzergah eklerken açılır menüden seçilebilir.</p>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>✈️ Havalimanları</h3>
+                    <div style="display:flex;gap:8px;">
+                        <input class="form-input" type="text" id="newAirport" placeholder="Örn: İstanbul Havalimanı (IST)" style="width:300px;">
+                        <button class="btn btn-primary" onclick="addAirport()"><i class="fas fa-plus"></i> Ekle</button>
+                    </div>
+                </div>
+                <div class="panel-body" id="airportsList"></div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>🏙️ İlçeler / Bölgeler</h3>
+                    <div style="display:flex;gap:8px;">
+                        <input class="form-input" type="text" id="newDistrict" placeholder="Örn: Sultanahmet, Taksim..." style="width:300px;">
+                        <button class="btn btn-primary" onclick="addDistrict()"><i class="fas fa-plus"></i> Ekle</button>
+                    </div>
+                </div>
+                <div class="panel-body" id="districtsList"></div>
+            </div>
+        </div>
+
+        <!-- ROUTES -->
+        <div id="tab-routes" class="tab-content">
+            <div class="page-header">
+                <h1>Güzergahlar & Fiyatlandırma</h1>
+                <p>Havalimanı-Lokasyon arası transfer fiyatlarını yönetin. Müşteri fiyat sorguladığında bu veriler kullanılır.</p>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Fiyat Kuralları</h3>
+                    <button class="btn btn-primary" onclick="toggleRouteForm()"><i class="fas fa-plus"></i> Güzergah Ekle</button>
+                </div>
+                <div class="panel-body">
+                    <div id="routeFormArea" style="display:none;margin-bottom:24px;padding:20px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
+                        <h4 style="margin-bottom:16px;font-weight:700;">Yeni Güzergah</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Havalimanı</label>
+                                <select class="form-input" id="rAirport"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Lokasyon (İlçe/Bölge)</label>
+                                <select class="form-input" id="rLocation"></select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Araç Tipi</label>
+                                <select class="form-input" id="rVehicle">
+                                    <option value="Vito">Mercedes Vito</option>
+                                    <option value="Sprinter">Mercedes Sprinter</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Fiyat (<span id="rCurrLabel">₺</span>)</label>
+                                <input class="form-input" type="number" id="rPrice" placeholder="850">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Tahmini Süre</label>
+                            <input class="form-input" type="text" id="rDuration" placeholder="~45 dk">
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;">
+                            <button class="btn btn-success" onclick="saveRoute()"><i class="fas fa-check"></i> Kaydet</button>
+                            <button class="btn btn-ghost" onclick="toggleRouteForm()">İptal</button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Havalimanı</th><th>Lokasyon</th><th>Araç</th><th>Süre</th><th>Fiyat</th><th style="text-align:right;">İşlem</th></tr>
+                        </thead>
+                        <tbody id="routesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLEET -->
+        <div id="tab-fleet" class="tab-content">
+            <div class="page-header">
+                <h1>Araç Filosu</h1>
+                <p>Türkiye yasalarına göre sadece Mercedes Vito ve Sprinter kullanılabilir.</p>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><h3>Araç Yönetimi</h3></div>
+                <div class="panel-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div style="padding:24px;border:2px solid #e2e8f0;border-radius:14px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                                <h4>Mercedes Vito VIP</h4>
+                                <label class="form-check" style="padding:8px 12px;">
+                                    <input type="checkbox" id="fleetVito" checked onchange="saveFleet()">
+                                    <span style="font-size:0.82rem;font-weight:600;">Aktif</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>Başlangıç Fiyatı (<span class="currSymbol">₺</span>)</label>
+                                <input class="form-input" type="number" id="fleetVitoPrice" value="850" style="max-width:120px;" onchange="saveFleet()">
+                            </div>
+                            <p style="font-size:0.82rem;color:#64748b;">Kapasite: 7 Yolcu | Wi-Fi | Klima</p>
+                        </div>
+                        <div style="padding:24px;border:2px solid #e2e8f0;border-radius:14px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                                <h4>Mercedes Sprinter VIP</h4>
+                                <label class="form-check" style="padding:8px 12px;">
+                                    <input type="checkbox" id="fleetSprinter" checked onchange="saveFleet()">
+                                    <span style="font-size:0.82rem;font-weight:600;">Aktif</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label>Başlangıç Fiyatı (<span class="currSymbol">₺</span>)</label>
+                                <input class="form-input" type="number" id="fleetSprinterPrice" value="1500" style="max-width:120px;" onchange="saveFleet()">
+                            </div>
+                            <p style="font-size:0.82rem;color:#64748b;">Kapasite: 12 Yolcu | Bagaj | TV</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWS -->
+        <div id="tab-reviews" class="tab-content">
+            <div class="page-header">
+                <h1>Müşteri Yorumları</h1>
+                <p>Sitede gösterilecek müşteri yorumlarını yönetin.</p>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <h3>Yorumlar</h3>
+                    <button class="btn btn-primary" onclick="toggleReviewForm()"><i class="fas fa-plus"></i> Yorum Ekle</button>
+                </div>
+                <div class="panel-body">
+                    <div id="reviewFormArea" style="display:none;margin-bottom:24px;padding:20px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;">
+                        <h4 style="margin-bottom:16px;font-weight:700;">Yeni Yorum</h4>
+                        <div class="form-row">
+                            <div class="form-group"><label>Ad Soyad</label><input class="form-input" type="text" id="revName" placeholder="Ahmet Kaya"></div>
+                            <div class="form-group"><label>Unvan / Şehir</label><input class="form-input" type="text" id="revRole" placeholder="İş İnsanı"></div>
+                        </div>
+                        <div class="form-group"><label>Yorum Metni</label><textarea class="form-input" id="revText" placeholder="Mükemmel hizmet..."></textarea></div>
+                        <div class="form-group"><label>Yıldız (1-5)</label><input class="form-input" type="number" id="revStars" value="5" min="1" max="5" style="max-width:80px;"></div>
+                        <div style="display:flex;gap:8px;"><button class="btn btn-success" onclick="saveReview()"><i class="fas fa-check"></i> Kaydet</button><button class="btn btn-ghost" onclick="toggleReviewForm()">İptal</button></div>
+                    </div>
+                    <table>
+                        <thead><tr><th>Ad Soyad</th><th>Unvan</th><th>Yorum</th><th>Puan</th><th style="text-align:right;">İşlem</th></tr></thead>
+                        <tbody id="reviewsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTACT -->
+        <div id="tab-contact" class="tab-content">
+            <div class="page-header">
+                <h1>İletişim Bilgileri</h1>
+                <p>Sitede gösterilecek iletişim bilgilerini güncelleyin.</p>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><h3>İletişim</h3></div>
+                <div class="panel-body" style="max-width:500px;">
+                    <div class="form-group"><label>Telefon</label><input class="form-input" type="text" id="contactPhone" value="+90 212 999 88 77"></div>
+                    <div class="form-group"><label>E-Posta</label><input class="form-input" type="text" id="contactEmail" value="destek@protrans.com"></div>
+                    <div class="form-group"><label>Adres / Konum</label><input class="form-input" type="text" id="contactLocation" value="İstanbul, Türkiye"></div>
+                    <div class="form-group"><label>WhatsApp Numarası (ülke kodu ile)</label><input class="form-input" type="text" id="contactWhatsapp" value="905000000000"></div>
+                    <button class="btn btn-success" onclick="saveContact()" style="margin-top:8px;"><i class="fas fa-save"></i> Kaydet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div id="tab-settings" class="tab-content">
+            <div class="page-header">
+                <h1>Genel Ayarlar</h1>
+                <p>Site genelindeki ayarları buradan yönetin.</p>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><h3>Para Birimi</h3></div>
+                <div class="panel-body" style="max-width:400px;">
+                    <div class="form-group">
+                        <label>Varsayılan Para Birimi</label>
+                        <select class="form-input" id="settingsCurrency" onchange="saveCurrency()">
+                            <option value="₺">₺ Türk Lirası (TL)</option>
+                            <option value="€">€ Euro (EUR)</option>
+                            <option value="$">$ Amerikan Doları (USD)</option>
+                        </select>
+                    </div>
+                    <p style="color:#64748b;font-size:0.82rem;">Bu ayar sitedeki tüm fiyat gösterimlerini etkiler.</p>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header"><h3>Veri Yönetimi</h3></div>
+                <div class="panel-body">
+                    <p style="color:#64748b;font-size:0.88rem;margin-bottom:16px;">Tüm veriler tarayıcınızın localStorage'ında saklanmaktadır.</p>
+                    <div style="display:flex;gap:12px;">
+                        <button class="btn btn-primary" onclick="exportData()"><i class="fas fa-download"></i> Verileri İndir (JSON)</button>
+                        <button class="btn btn-danger" onclick="resetData()"><i class="fas fa-trash"></i> Fabrika Ayarlarına Sıfırla</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+    // ===== TAB =====
+    function showTab(tab, el) {
+        document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+        document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+        document.getElementById('tab-' + tab).classList.add('active');
+        if(el) el.classList.add('active');
+        refreshTab(tab);
+    }
+
+    function toast(msg) {
+        var t = document.getElementById('toast');
+        t.textContent = '✅ ' + msg;
+        t.style.display = 'block';
+        setTimeout(function(){ t.style.display='none'; }, 3000);
+    }
+
+    // ===== DATA =====
+    var STORAGE_KEY = 'proAdminData';
+
+    var defaultData = {
+        currency: '₺',
+        phone: '+90 212 999 88 77',
+        email: 'destek@protrans.com',
+        location: 'İstanbul, Türkiye',
+        whatsapp: '905000000000',
+        vitoEnabled: true,
+        sprinterEnabled: true,
+        vitoPrice: 850,
+        sprinterPrice: 1500,
+        airports: ['İstanbul Havalimanı (IST)', 'Sabiha Gökçen (SAW)'],
+        districts: ['Sultanahmet', 'Taksim', 'Beşiktaş', 'Kadıköy', 'Şişli', 'Bebek', 'Bakırköy', 'Fatih', 'Üsküdar', 'Beylikdüzü'],
+        routes: [
+            { airport:'İstanbul Havalimanı (IST)', location:'Sultanahmet', vehicle:'Vito', duration:'~45 dk', price:850 },
+            { airport:'Sabiha Gökçen (SAW)', location:'Taksim', vehicle:'Vito', duration:'~60 dk', price:1100 },
+            { airport:'İstanbul Havalimanı (IST)', location:'Beşiktaş', vehicle:'Vito', duration:'~40 dk', price:900 },
+            { airport:'Sabiha Gökçen (SAW)', location:'Kadıköy', vehicle:'Vito', duration:'~30 dk', price:650 },
+            { airport:'İstanbul Havalimanı (IST)', location:'Şişli', vehicle:'Vito', duration:'~35 dk', price:800 },
+            { airport:'İstanbul Havalimanı (IST)', location:'Bebek', vehicle:'Vito', duration:'~45 dk', price:950 }
+        ],
+        testimonials: [
+            { name:'Ahmet Kaya', role:'Şirket Müdürü', text:'İş toplantılarım için her zaman ProTrans\'ı tercih ediyorum. Zamanında, nazik şoförler.', stars:5 },
+            { name:'Zeynep Limon', role:'Turist', text:'Aile tatilimiz için VIP Van kiraladık. Çocuk koltuğu dahil her detay düşünülmüştü.', stars:5 }
+        ]
+    };
+
+    function loadData() {
+        var d = localStorage.getItem(STORAGE_KEY);
+        if (d) {
+            var parsed = JSON.parse(d);
+            // Migrate old data
+            if (!parsed.currency) parsed.currency = '₺';
+            if (!parsed.airports) parsed.airports = defaultData.airports;
+            if (!parsed.districts) parsed.districts = defaultData.districts;
+            // Migrate old route format
+            if (parsed.routes && parsed.routes[0] && parsed.routes[0].from) {
+                parsed.routes = parsed.routes.map(function(r) {
+                    return { airport: r.from || r.airport, location: r.to || r.location, vehicle: r.vehicle, duration: r.duration, price: r.price };
+                });
+            }
+            return parsed;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+        return JSON.parse(JSON.stringify(defaultData));
+    }
+
+    function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+    var data = loadData();
+
+    function getCurr() { return data.currency || '₺'; }
+
+    // ===== DASHBOARD =====
+    function refreshDashboard() {
+        var d = loadData();
+        document.getElementById('statRoutes').textContent = d.routes.length;
+        var v = 0; if(d.vitoEnabled) v++; if(d.sprinterEnabled) v++;
+        document.getElementById('statVehicles').textContent = v;
+        document.getElementById('statReviews').textContent = d.testimonials.length;
+        var avg = d.routes.length > 0 ? Math.round(d.routes.reduce(function(s,r){return s+r.price;},0)/d.routes.length) : 0;
+        document.getElementById('statAvgPrice').textContent = getCurr() + avg;
+
+        var html = '';
+        d.routes.slice(-5).reverse().forEach(function(r) {
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;">' +
+                '<div><span style="font-weight:600;">' + r.airport + '</span> <span style="color:#94a3b8;margin:0 8px;">→</span> <span style="font-weight:600;">' + r.location + '</span></div>' +
+                '<div><span class="badge badge-blue">' + r.vehicle + '</span> <span style="font-weight:800;color:#059669;margin-left:12px;">' + getCurr() + r.price + '</span></div></div>';
+        });
+        document.getElementById('dashboardRoutes').innerHTML = html || '<p style="color:#94a3b8;text-align:center;padding:20px;">Henüz güzergah eklenmemiş.</p>';
+    }
+
+    // ===== LOCATIONS =====
+    function renderLocations() {
+        var d = loadData();
+        var ah = '';
+        d.airports.forEach(function(a, i) {
+            ah += '<span class="tag"><i class="fas fa-plane" style="color:#3b82f6;"></i> ' + a + ' <span class="remove" onclick="removeAirport(' + i + ')">×</span></span>';
+        });
+        document.getElementById('airportsList').innerHTML = ah || '<p style="color:#94a3b8;">Henüz havalimanı eklenmemiş.</p>';
+
+        var dh = '';
+        d.districts.forEach(function(loc, i) {
+            dh += '<span class="tag"><i class="fas fa-map-marker-alt" style="color:#10b981;"></i> ' + loc + ' <span class="remove" onclick="removeDistrict(' + i + ')">×</span></span>';
+        });
+        document.getElementById('districtsList').innerHTML = dh || '<p style="color:#94a3b8;">Henüz lokasyon eklenmemiş.</p>';
+    }
+
+    function addAirport() {
+        var v = document.getElementById('newAirport').value.trim();
+        if (!v) return;
+        var d = loadData();
+        d.airports.push(v);
+        saveData(d);
+        document.getElementById('newAirport').value = '';
+        renderLocations();
+        toast('Havalimanı eklendi!');
+    }
+
+    function removeAirport(i) {
+        var d = loadData();
+        d.airports.splice(i, 1);
+        saveData(d);
+        renderLocations();
+    }
+
+    function addDistrict() {
+        var v = document.getElementById('newDistrict').value.trim();
+        if (!v) return;
+        var d = loadData();
+        d.districts.push(v);
+        saveData(d);
+        document.getElementById('newDistrict').value = '';
+        renderLocations();
+        toast('Lokasyon eklendi!');
+    }
+
+    function removeDistrict(i) {
+        var d = loadData();
+        d.districts.splice(i, 1);
+        saveData(d);
+        renderLocations();
+    }
+
+    // ===== ROUTES =====
+    function populateRouteDropdowns() {
+        var d = loadData();
+        var aSelect = document.getElementById('rAirport');
+        var lSelect = document.getElementById('rLocation');
+        aSelect.innerHTML = '';
+        lSelect.innerHTML = '';
+        d.airports.forEach(function(a) { aSelect.innerHTML += '<option>' + a + '</option>'; });
+        d.districts.forEach(function(loc) { lSelect.innerHTML += '<option>' + loc + '</option>'; });
+        document.getElementById('rCurrLabel').textContent = getCurr();
+    }
+
+    function renderRoutes() {
+        var d = loadData();
+        var c = getCurr();
+        var html = '';
+        d.routes.forEach(function(r, i) {
+            html += '<tr>' +
+                '<td style="font-weight:600;"><i class="fas fa-plane" style="color:#3b82f6;margin-right:8px;font-size:0.8rem;"></i>' + r.airport + '</td>' +
+                '<td style="font-weight:600;">' + r.location + '</td>' +
+                '<td><span class="badge badge-blue">' + r.vehicle + '</span></td>' +
+                '<td>' + r.duration + '</td>' +
+                '<td style="font-weight:800;color:#059669;">' + c + r.price + '</td>' +
+                '<td style="text-align:right;"><button class="btn btn-danger btn-sm" onclick="deleteRoute(' + i + ')"><i class="fas fa-trash"></i></button></td></tr>';
+        });
+        document.getElementById('routesTableBody').innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:32px;">Henüz güzergah eklenmemiş.</td></tr>';
+    }
+
+    function toggleRouteForm() {
+        var el = document.getElementById('routeFormArea');
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        if (el.style.display === 'block') populateRouteDropdowns();
+    }
+
+    function saveRoute() {
+        var d = loadData();
+        var airport = document.getElementById('rAirport').value;
+        var location = document.getElementById('rLocation').value;
+        var price = parseInt(document.getElementById('rPrice').value);
+        if (!airport || !location || !price) { alert('Tüm alanları doldurun.'); return; }
+        d.routes.push({
+            airport: airport,
+            location: location,
+            vehicle: document.getElementById('rVehicle').value,
+            duration: document.getElementById('rDuration').value || '~40 dk',
+            price: price
+        });
+        saveData(d);
+        toggleRouteForm();
+        renderRoutes();
+        refreshDashboard();
+        toast('Güzergah eklendi!');
+        document.getElementById('rPrice').value = '';
+        document.getElementById('rDuration').value = '';
+    }
+
+    function deleteRoute(i) {
+        if (!confirm('Bu güzergahı silmek istediğinize emin misiniz?')) return;
+        var d = loadData();
+        d.routes.splice(i, 1);
+        saveData(d);
+        renderRoutes();
+        refreshDashboard();
+        toast('Güzergah silindi.');
+    }
+
+    // ===== FLEET =====
+    function loadFleet() {
+        var d = loadData();
+        document.getElementById('fleetVito').checked = d.vitoEnabled;
+        document.getElementById('fleetSprinter').checked = d.sprinterEnabled;
+        document.getElementById('fleetVitoPrice').value = d.vitoPrice;
+        document.getElementById('fleetSprinterPrice').value = d.sprinterPrice;
+        document.querySelectorAll('.currSymbol').forEach(function(el){ el.textContent = getCurr(); });
+    }
+
+    function saveFleet() {
+        var d = loadData();
+        d.vitoEnabled = document.getElementById('fleetVito').checked;
+        d.sprinterEnabled = document.getElementById('fleetSprinter').checked;
+        d.vitoPrice = parseInt(document.getElementById('fleetVitoPrice').value) || 850;
+        d.sprinterPrice = parseInt(document.getElementById('fleetSprinterPrice').value) || 1500;
+        saveData(d);
+        refreshDashboard();
+        toast('Araç ayarları güncellendi.');
+    }
+
+    // ===== REVIEWS =====
+    function renderReviews() {
+        var d = loadData();
+        var html = '';
+        d.testimonials.forEach(function(t, i) {
+            var stars = '';
+            for (var s = 0; s < t.stars; s++) stars += '⭐';
+            html += '<tr><td style="font-weight:600;">' + t.name + '</td><td>' + t.role + '</td>' +
+                '<td style="max-width:300px;">' + t.text.substring(0,60) + '...</td><td>' + stars + '</td>' +
+                '<td style="text-align:right;"><button class="btn btn-danger btn-sm" onclick="deleteReview(' + i + ')"><i class="fas fa-trash"></i></button></td></tr>';
+        });
+        document.getElementById('reviewsTableBody').innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:32px;">Henüz yorum eklenmemiş.</td></tr>';
+    }
+
+    function toggleReviewForm() { var el = document.getElementById('reviewFormArea'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+
+    function saveReview() {
+        var d = loadData();
+        var name = document.getElementById('revName').value;
+        var text = document.getElementById('revText').value;
+        if (!name || !text) { alert('Ad ve yorum giriniz.'); return; }
+        d.testimonials.push({ name: name, role: document.getElementById('revRole').value, text: text, stars: parseInt(document.getElementById('revStars').value)||5 });
+        saveData(d);
+        toggleReviewForm();
+        renderReviews();
+        refreshDashboard();
+        toast('Yorum eklendi!');
+        document.getElementById('revName').value = '';
+        document.getElementById('revRole').value = '';
+        document.getElementById('revText').value = '';
+    }
+
+    function deleteReview(i) {
+        if (!confirm('Silmek istediğinize emin misiniz?')) return;
+        var d = loadData();
+        d.testimonials.splice(i, 1);
+        saveData(d);
+        renderReviews();
+        toast('Yorum silindi.');
+    }
+
+    // ===== CONTACT =====
+    function loadContact() {
+        var d = loadData();
+        document.getElementById('contactPhone').value = d.phone;
+        document.getElementById('contactEmail').value = d.email;
+        document.getElementById('contactLocation').value = d.location;
+        document.getElementById('contactWhatsapp').value = d.whatsapp || '905000000000';
+    }
+
+    function saveContact() {
+        var d = loadData();
+        d.phone = document.getElementById('contactPhone').value;
+        d.email = document.getElementById('contactEmail').value;
+        d.location = document.getElementById('contactLocation').value;
+        d.whatsapp = document.getElementById('contactWhatsapp').value;
+        saveData(d);
+        toast('İletişim bilgileri güncellendi!');
+    }
+
+    // ===== SETTINGS =====
+    function loadSettings() {
+        var d = loadData();
+        document.getElementById('settingsCurrency').value = d.currency || '₺';
+    }
+
+    function saveCurrency() {
+        var d = loadData();
+        d.currency = document.getElementById('settingsCurrency').value;
+        saveData(d);
+        data = d;
+        refreshAll();
+        toast('Para birimi güncellendi: ' + d.currency);
+    }
+
+    function exportData() {
+        var d = loadData();
+        var blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'protrans-admin-verileri.json';
+        a.click();
+        toast('Veriler indirildi!');
+    }
+
+    function resetData() {
+        if (!confirm('Tüm veriler sıfırlanacak! Emin misiniz?')) return;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+        data = loadData();
+        refreshAll();
+        toast('Fabrika ayarlarına döndürüldü.');
+    }
+
+    // ===== REFRESH =====
+    function refreshTab(tab) {
+        if (tab==='dashboard') refreshDashboard();
+        else if (tab==='locations') renderLocations();
+        else if (tab==='routes') renderRoutes();
+        else if (tab==='fleet') loadFleet();
+        else if (tab==='reviews') renderReviews();
+        else if (tab==='contact') loadContact();
+        else if (tab==='settings') loadSettings();
+    }
+
+    function refreshAll() {
+        refreshDashboard(); renderLocations(); renderRoutes(); loadFleet(); renderReviews(); loadContact(); loadSettings();
+    }
+
+    refreshAll();
+    </script>
+</body>
+</html>
