@@ -85,7 +85,7 @@
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">TRANSFER TARİHİ</label>
+                            <label id="dateLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">TRANSFER TARİHİ</label>
                             <input type="date" id="selDate" class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900">
                         </div>
                         <div>
@@ -93,6 +93,19 @@
                             <input type="time" id="selTime" class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900">
                         </div>
                     </div>
+
+                    <!-- Round Trip Fields -->
+                    <div id="roundTripFields" class="hidden grid grid-cols-2 gap-4 animate-in fade-in duration-500">
+                        <div>
+                            <label class="text-[9px] font-black text-blue-600 uppercase tracking-widest ml-1 mb-2 block italic">DÖNÜŞ TARİHİ</label>
+                            <input type="date" id="retDate" class="w-full bg-blue-50/50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-blue-600 uppercase tracking-widest ml-1 mb-2 block italic">DÖNÜŞ SAATİ</label>
+                            <input type="time" id="retTime" class="w-full bg-blue-50/50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900">
+                        </div>
+                    </div>
+
                     <div>
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">ÖZEL YOLCU SAYISI</label>
                         <select id="selPax" class="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500/20 focus:bg-white p-4 rounded-2xl outline-none font-bold text-slate-900">
@@ -222,6 +235,11 @@
 
         async function load() {
             try {
+                // Set min dates to today
+                const today = new Date().toISOString().split('T')[0];
+                const dateInputs = [document.getElementById('selDate'), document.getElementById('retDate')];
+                dateInputs.forEach(i => { if(i) i.setAttribute('min', today); });
+
                 const [settings, airports, districts, fleet, routes] = await Promise.all([
                     sb.from('site_settings').select('*').eq('site_key', SITE_KEY).single(),
                     sb.from('airports').select('*').eq('site_key', SITE_KEY),
@@ -241,7 +259,8 @@
                 syncUI();
             } catch (err) {
                 console.error('Supabase Load Error:', err);
-                alert('Sistem verileri yüklenemedi. Lütfen internet bağlantınızı kontrol edin.');
+                // Fallback to sync UI even if settings fail
+                syncUI();
             }
         }
 
@@ -249,6 +268,16 @@
             booking.type = (t === 'one' ? 'Tek Yön' : 'Gidiş-Dönüş');
             document.querySelectorAll('.trip-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+
+            const roundFields = document.getElementById('roundTripFields');
+            const dateLabel = document.getElementById('dateLabel');
+            if(t === 'round') {
+                roundFields.classList.remove('hidden');
+                dateLabel.textContent = 'GİDİŞ TARİHİ';
+            } else {
+                roundFields.classList.add('hidden');
+                dateLabel.textContent = 'TRANSFER TARİHİ';
+            }
         }
 
         function syncUI() {
@@ -303,8 +332,25 @@
         }
 
         function launchBooking() {
-            booking = { ...booking, from: document.getElementById('selFrom').value, to: document.getElementById('selTo').value, date: document.getElementById('selDate').value, time: document.getElementById('selTime').value, pax: parseInt(document.getElementById('selPax').value) };
+            const date = document.getElementById('selDate').value;
+            const time = document.getElementById('selTime').value;
+            const retDate = document.getElementById('retDate').value;
+            const retTime = document.getElementById('retTime').value;
+
+            booking = { 
+                ...booking, 
+                from: document.getElementById('selFrom').value, 
+                to: document.getElementById('selTo').value, 
+                date, 
+                time, 
+                pax: parseInt(document.getElementById('selPax').value),
+                return_date: retDate,
+                return_time: retTime
+            };
+
             if(!booking.from || !booking.to || !booking.date || !booking.time) return alert("Hatalı giriş, lütfen tüm alanları seçin.");
+            if(booking.type === 'Gidiş-Dönüş' && (!retDate || !retTime)) return alert("Lütfen dönüş tarihi ve saatini belirtin.");
+
             document.getElementById('modalBookingOverlay').style.display = 'flex';
             renderStage1();
         }
