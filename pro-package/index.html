@@ -482,10 +482,13 @@
                 <div class="fleet-card">
                     <div class="fleet-visual"><img src="${v.image_path}" style="width:100%; height:100%; object-fit:cover;"> <span class="fleet-badge">VİP</span></div>
                     <div class="fleet-details">
-                        <h3>${v.label}</h3>
-                        <p style="font-size:0.85rem; color:var(--text-muted);">${v.features ? v.features.join(', ') : 'VIP Donanım'}</p>
-                        <div class="fleet-specs"><span class="spec"><i class="fas fa-users"></i> ${v.capacity} Yolcu</span><span class="spec"><i class="fas fa-suitcase"></i> Bagaj</span></div>
-                        <div class="fleet-price">${c}${v.base_price}'den</div>
+                        <h3 style="font-size:1.15rem; font-weight:900;">${v.label}</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">${v.features ? v.features.join(' | ') : 'VIP Donanım'}</p>
+                        <div class="fleet-specs" style="display:flex; gap:12px; margin-bottom:12px;">
+                            <span class="spec" style="background:var(--bg-muted); padding:4px 12px; border-radius:10px; font-size:0.75rem; font-weight:700;"><i class="fas fa-users" style="color:var(--accent); margin-right:4px;"></i> ${v.capacity || '7'} Yolcu</span>
+                            <span class="spec" style="background:var(--bg-muted); padding:4px 12px; border-radius:10px; font-size:0.75rem; font-weight:700;"><i class="fas fa-suitcase" style="color:var(--accent); margin-right:4px;"></i> Geniş Bagaj</span>
+                        </div>
+                        <div class="fleet-price" style="font-size:1.3rem; font-weight:900; color:var(--accent);">${c}${v.base_price}'den</div>
                     </div>
                 </div>`).join('');
         }
