@@ -526,8 +526,13 @@
         
         window.onscroll = function() {
             var n = document.getElementById('mainNav');
-            if(window.scrollY > 50) n.classList.add('px-4 py-2 mt-4').querySelector('.container > div').classList.add('shadow-2xl border-slate-200 bg-white/95');
-            else n.classList.remove('px-4 py-2 mt-4').querySelector('.container > div').classList.remove('shadow-2xl border-slate-200 bg-white/95');
+            if(window.scrollY > 50) {
+                n.classList.add('px-4', 'py-2', 'mt-4');
+                n.querySelector('.container > div').classList.add('shadow-2xl', 'border-slate-200', 'bg-white/95');
+            } else {
+                n.classList.remove('px-4', 'py-2', 'mt-4');
+                n.querySelector('.container > div').classList.remove('shadow-2xl', 'border-slate-200', 'bg-white/95');
+            }
         };
 
         window.addEventListener('load', load);
