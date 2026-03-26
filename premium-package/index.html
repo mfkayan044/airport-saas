@@ -366,7 +366,7 @@
                 );
 
                 let price = foundR ? foundR.price : type.base_price;
-                if(booking.type === 'Gidiş-Dönüş') price = Math.round(price * 1.8);
+                if(booking.type === 'Gidiş-Dönüş') price = Math.round(price * 2);
                 
                 carItems += `
                     <div class="bg-slate-50 p-10 rounded-[32px] border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all group" onclick="setCar('${type.label}', ${price}, '${type.vehicle_type}')">
