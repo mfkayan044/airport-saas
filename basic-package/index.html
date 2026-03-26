@@ -7,6 +7,7 @@
     <meta name="description" content="Profesyonel VIP transfer hizmetleri. Havaalanı karşılama, şoförlü araç kiralama ve konforlu ulaşım çözümleri.">
     <link rel="stylesheet" href="/basic-package/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -139,6 +140,10 @@
                         <div class="form-group">
                             <label for="phone">Telefon Numarası</label>
                             <input type="tel" id="phone" placeholder="0 (5XX) XXX XX XX" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">E-Posta Adresi</label>
+                            <input type="email" id="email" placeholder="ornek@mail.com" required>
                         </div>
                         <div class="form-group">
                             <label for="transferType">Transfer Yönü</label>
@@ -279,11 +284,31 @@
     </footer>
 
     <!-- Floating WhatsApp -->
-    <a href="https://wa.me/905000000000" class="whatsapp-float" target="_blank" title="WhatsApp üzerinden bilgi al">
+    <a href="#" id="floatingWa" class="whatsapp-float" target="_blank" title="WhatsApp üzerinden bilgi al">
         <i class="fab fa-whatsapp"></i>
     </a>
 
     <script>
+    const { createClient } = supabase;
+    const sb = createClient('https://nbzmixvtgxjqwvsjzwjk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iem1peHZ0Z3hqcXd2c2p6d2prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjU3MzIsImV4cCI6MjA5MDEwMTczMn0.ZeWBdBQvDJC7u-c8OqMp2Q9dPuvpxfLkt7vG8vQsRuM');
+    const SITE_KEY = 'basic';
+    var settings = { phone: '', email: '', whatsapp: '', currency: '₺' };
+
+    async function load() {
+        try {
+            const { data } = await sb.from('site_settings').select('*').eq('site_key', SITE_KEY).single();
+            if (data) {
+                settings = data;
+                document.getElementById('contact').innerHTML = `<h3>İletişim</h3>
+                    <p><i class="fas fa-phone"></i> ${settings.phone}</p>
+                    <p><i class="fas fa-envelope"></i> ${settings.email}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> İstanbul, Türkiye</p>`;
+                document.getElementById('floatingWa').href = 'https://wa.me/' + settings.whatsapp;
+            }
+        } catch (err) { console.error('Load Error:', err); }
+    }
+    window.addEventListener('load', load);
+
     // Transfer yönü seçildiğinde formda doğru alanları göster
     function updateTransferFields() {
         var type = document.getElementById('transferType').value;
@@ -304,6 +329,7 @@
         var type = document.getElementById('transferType').value;
         var name = document.getElementById('name').value;
         var phone = document.getElementById('phone').value;
+        var email = document.getElementById('email').value;
         var date = document.getElementById('date').value;
         var tripType = document.querySelector('input[name="tripType"]:checked').value;
         var returnDate = document.getElementById('returnDate').value;
@@ -336,19 +362,39 @@
 
         var tripLabel = (tripType === 'round_trip') ? 'Çift Yön (Gidiş-Dönüş)' : 'Tek Yön';
 
-        return { name, phone, date, pickup, dropoff, type, tripType, tripLabel, returnDate };
+        return { name, phone, email, date, pickup, dropoff, type, tripType, tripLabel, returnDate };
+    }
+
+    async function insertBooking(data) {
+        try {
+            await sb.from('reservations').insert({
+                site_key: SITE_KEY,
+                customer_name: data.name,
+                customer_phone: data.phone,
+                customer_email: data.email,
+                from_location: data.pickup,
+                to_location: data.dropoff,
+                transfer_date: data.date,
+                trip_type: data.tripType,
+                status: 'Bekliyor',
+                notes: data.tripType === 'round_trip' ? `Dönüş: ${data.returnDate}` : ''
+            });
+        } catch (err) { console.error('Insert Error:', err); }
     }
 
     // E-posta ile gönder
-    document.getElementById('reservationForm').addEventListener('submit', function(e) {
+    document.getElementById('reservationForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         var data = getFormData();
         if (!data) return;
+
+        await insertBooking(data);
 
         var subject = encodeURIComponent('Transfer Talebi - ' + data.name);
         var bodyText =
             'Ad Soyad: ' + data.name + '\n' +
             'Telefon: ' + data.phone + '\n' +
+            'E-Posta: ' + data.email + '\n' +
             'Gidiş Tarihi: ' + data.date + '\n' +
             'Alış: ' + data.pickup + '\n' +
             'Varış: ' + data.dropoff + '\n' +
@@ -357,19 +403,22 @@
         if (data.tripType === 'round_trip') {
             bodyText += '\nDönüş Tarihi: ' + data.returnDate;
         }
-        window.location.href = 'mailto:info@viptransfer.com?subject=' + subject + '&body=' + encodeURIComponent(bodyText);
+        window.location.href = `mailto:${settings.email || 'info@viptransfer.com'}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
     });
 
     // WhatsApp ile gönder
-    function sendWhatsApp(e) {
+    async function sendWhatsApp(e) {
         e.preventDefault();
         var data = getFormData();
         if (!data) return;
+
+        await insertBooking(data);
 
         var msgText =
             '🚗 *Yeni Transfer Talebi*\n\n' +
             '👤 Ad Soyad: ' + data.name + '\n' +
             '📱 Telefon: ' + data.phone + '\n' +
+            '📧 E-Posta: ' + data.email + '\n' +
             '📅 Gidiş Tarihi: ' + data.date + '\n' +
             '📍 Alış: ' + data.pickup + '\n' +
             '🏁 Varış: ' + data.dropoff + '\n' +
@@ -378,7 +427,7 @@
         if (data.tripType === 'round_trip') {
             msgText += '\n📅 Dönüş: ' + data.returnDate;
         }
-        window.open('https://wa.me/905000000000?text=' + encodeURIComponent(msgText), '_blank');
+        window.open(`https://wa.me/${settings.whatsapp || '905000000000'}?text=${encodeURIComponent(msgText)}`, '_blank');
     }
     </script>
 </body>

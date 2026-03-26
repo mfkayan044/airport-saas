@@ -7,6 +7,7 @@
     <meta name="description" content="ProTrans - Kurumsal havalimanı transfer hizmetleri. Çok dilli destek, geniş araç filosu ve profesyonel şoförler.">
     <link rel="stylesheet" href="/pro-package/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -216,30 +217,52 @@
     <a href="/pro-package/admin.html" style="position:fixed;bottom:24px;left:24px;z-index:9999;background:rgba(15,23,42,0.8);backdrop-filter:blur(8px);color:white;border:1px solid rgba(255,255,255,0.1);padding:12px 20px;border-radius:14px;text-decoration:none;font-weight:700;font-size:0.85rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);display:flex;align-items:center;gap:8px;">⚙ <span>Yönetici Paneli</span></a>
 
     <script>
+    const { createClient } = supabase;
+    const sb = createClient('https://nbzmixvtgxjqwvsjzwjk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iem1peHZ0Z3hqcXd2c2p6d2prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjU3MzIsImV4cCI6MjA5MDEwMTczMn0.ZeWBdBQvDJC7u-c8OqMp2Q9dPuvpxfLkt7vG8vQsRuM');
+    const SITE_KEY = 'pro';
+
     var currentLang = 'tr';
     var bookingData = {};
+    var proData = { 
+        currency: '₺', whatsapp: '', email: '', phone: '', location: '',
+        airports: [], districts: [], fleet: [], routes: [], testimonials: []
+    };
 
-    function loadSiteData() {
-        var raw = localStorage.getItem('proAdminData');
-        return raw ? JSON.parse(raw) : null;
+    async function load() {
+        try {
+            const [settings, airports, districts, fleet, routes, testimonials] = await Promise.all([
+                sb.from('site_settings').select('*').eq('site_key', SITE_KEY).single(),
+                sb.from('airports').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
+                sb.from('districts').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
+                sb.from('fleet').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
+                sb.from('routes').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
+                sb.from('testimonials').select('*').eq('site_key', SITE_KEY).eq('is_active', true)
+            ]);
+
+            if (settings.data) proData = { ...proData, ...settings.data };
+            proData.airports = airports.data || [];
+            proData.districts = districts.data || [];
+            proData.fleet = fleet.data || [];
+            proData.routes = routes.data || [];
+            proData.testimonials = testimonials.data || [];
+            
+            populateDropdowns();
+            applySiteData();
+            switchLang('tr');
+        } catch (err) {
+            console.error('Supabase Load Error:', err);
+        }
     }
 
-    function getCurrency() {
-        var d = loadSiteData();
-        return (d && d.currency) ? d.currency : '₺';
-    }
+    function getCurrency() { return proData.currency || '₺'; }
 
     function populateDropdowns() {
-        var d = loadSiteData();
         var airportSel = document.getElementById('proAirport');
         var districtSel = document.getElementById('proDistrict');
         if(!airportSel || !districtSel) return;
         
-        var airports = (d && d.airports) ? d.airports : ['İstanbul Havalimanı (IST)', 'Sabiha Gökçen (SAW)'];
-        var districts = (d && d.districts) ? d.districts : ['Sultanahmet', 'Taksim', 'Beşiktaş'];
-        
-        airportSel.innerHTML = airports.map(a => `<option value="${a}">${a}</option>`).join('');
-        districtSel.innerHTML = districts.map(d => `<option value="${d}">${d}</option>`).join('');
+        airportSel.innerHTML = proData.airports.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+        districtSel.innerHTML = proData.districts.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
     }
 
     function switchLang(lang) {
@@ -268,7 +291,6 @@
     // ===== MODAL STEP 1: VEHICLE & PRICE =====
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        var data = loadSiteData();
         bookingData = {
             type: document.getElementById('proTransferType').value,
             airport: document.getElementById('proAirport').value,
@@ -281,12 +303,7 @@
 
         if(!bookingData.date) { alert('Lütfen tarih seçiniz.'); return; }
 
-        var foundRoute = null;
-        if(data && data.routes) {
-            data.routes.forEach(r => {
-                if(r.airport === bookingData.airport && r.location === bookingData.district) foundRoute = r;
-            });
-        }
+        var foundRoute = proData.routes.find(r => r.airport_name === bookingData.airport && r.location === bookingData.district);
         bookingData.route = foundRoute;
         renderStep1();
         document.getElementById('priceModal').style.display = 'block';
@@ -336,6 +353,10 @@
         var html = `
             <div style="display:flex; flex-direction:column; gap:20px;">
                 <div class="modal-form-group">
+                    <label>E-Posta Adresi</label>
+                    <input type="email" class="modal-input" id="contactEmail" placeholder="ornek@mail.com" required>
+                </div>
+                <div class="modal-form-group">
                     <label>Uçuş Kodu (Geliş - Zorunlu)</label>
                     <input type="text" class="modal-input" id="flightIn" placeholder="Örn: TK1822" required>
                 </div>
@@ -365,6 +386,7 @@
         bookingData.flightIn = fi;
         bookingData.flightOut = document.getElementById('flightOut') ? document.getElementById('flightOut').value : '';
         bookingData.tel = ct;
+        bookingData.email = document.getElementById('contactEmail').value;
         bookingData.passengers = Array.from(document.querySelectorAll('.passenger-row')).map(row => {
             return row.children[0].value + ' ' + row.children[1].value;
         }).filter(name => name.trim() !== '');
@@ -387,6 +409,10 @@
                     ${bookingData.flightOut ? `<div><span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">DÖNÜŞ UÇUŞU</span><div style="font-weight:700;">${bookingData.flightOut}</div></div>` : ''}
                 </div>
                 <div style="margin-top:16px; padding-top:16px; border-top:1px solid #e2e8f0;">
+                    <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">İLETİŞİM</span>
+                    <div style="font-size:0.85rem; font-weight:600;">${bookingData.tel} / ${bookingData.email}</div>
+                </div>
+                <div style="margin-top:16px; padding-top:16px; border-top:1px solid #e2e8f0;">
                     <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">YOLCULAR</span>
                     <div style="font-size:0.9rem; font-weight:600;">${bookingData.passengers.join(', ')}</div>
                 </div>
@@ -403,33 +429,36 @@
         document.getElementById('modalBody').innerHTML = html;
     }
 
-    function generateMessage() {
-        var c = getCurrency();
-        var total = bookingData.route ? (bookingData.trip === 'round_trip' ? bookingData.route.price * 2 : bookingData.route.price) : 'Fiyat Sorunuz';
-        var msg = `*YENİ REZERVASYON TALEBİ*\n\n`;
-        msg += `*Rota:* ${bookingData.airport} ➔ ${bookingData.district}\n`;
-        msg += `*Tarih:* ${bookingData.date}\n`;
-        msg += `*Tip:* ${bookingData.trip === 'round_trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}\n`;
-        msg += `*Yolcu:* ${bookingData.pax} Kişi\n`;
-        msg += `*Yolcu İsimleri:* ${bookingData.passengers.join(', ')}\n`;
-        msg += `*Uçuş Kodu (Geliş):* ${bookingData.flightIn}\n`;
-        if(bookingData.flightOut) msg += `*Uçuş Kodu (Dönüş):* ${bookingData.flightOut}\n`;
-        msg += `*İletişim:* ${bookingData.tel}\n\n`;
-        msg += `*TOPLAM TUTAR:* ${bookingData.route ? c+total : total}\n\n`;
-        msg += `Lütfen onaylayınız.`;
-        return msg;
+    async function insertBooking() {
+        try {
+            await sb.from('reservations').insert({
+                site_key: SITE_KEY,
+                customer_name: bookingData.passengers.join(', '),
+                customer_phone: bookingData.tel,
+                customer_email: bookingData.email,
+                from_location: bookingData.airport,
+                to_location: bookingData.district,
+                transfer_date: bookingData.date,
+                trip_type: bookingData.trip,
+                pax_count: bookingData.pax,
+                vehicle_type: 'Mercedes Vito VIP',
+                total_price: bookingData.route ? (bookingData.trip === 'round_trip' ? bookingData.route.price * 2 : bookingData.route.price) : 0,
+                status: 'Bekliyor',
+                notes: `Uçuş: ${bookingData.flightIn} / ${bookingData.flightOut || '-'}`
+            });
+        } catch (err) { console.error('DB Insert Error:', err); }
     }
 
     function sendWhatsApp() {
-        var d = loadSiteData();
-        var wa = (d && d.whatsapp) ? d.whatsapp : '905000000000';
+        insertBooking();
+        var wa = proData.whatsapp || '905000000000';
         var msg = generateMessage();
         window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent(msg), '_blank');
     }
 
     function sendEmail() {
-        var d = loadSiteData();
-        var email = (d && d.email) ? d.email : 'destek@protrans.com';
+        insertBooking();
+        var email = proData.email || 'destek@protrans.com';
         var msg = generateMessage();
         var subject = `Transfer Rezervasyonu - ${bookingData.airport} > ${bookingData.district}`;
         window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`, '_blank');
@@ -441,53 +470,50 @@
     }
 
     function applySiteData() {
-        var data = loadSiteData();
-        if(!data) return;
         var c = getCurrency();
         
-        if(document.getElementById('footerPhone')) document.getElementById('footerPhone').innerHTML = `<i class="fas fa-phone" style="color:var(--accent); margin-right:8px;"></i> ${data.phone}`;
-        if(document.getElementById('footerEmail')) document.getElementById('footerEmail').innerHTML = `<i class="fas fa-envelope" style="color:var(--accent); margin-right:8px;"></i> ${data.email}`;
-        if(document.getElementById('footerLocation')) document.getElementById('footerLocation').innerHTML = `<i class="fas fa-map-marker-alt" style="color:var(--accent); margin-right:8px;"></i> ${data.location}`;
+        if(document.getElementById('footerPhone')) document.getElementById('footerPhone').innerHTML = `<i class="fas fa-phone" style="color:var(--accent); margin-right:8px;"></i> ${proData.phone}`;
+        if(document.getElementById('footerEmail')) document.getElementById('footerEmail').innerHTML = `<i class="fas fa-envelope" style="color:var(--accent); margin-right:8px;"></i> ${proData.email}`;
+        if(document.getElementById('footerLocation')) document.getElementById('footerLocation').innerHTML = `<i class="fas fa-map-marker-alt" style="color:var(--accent); margin-right:8px;"></i> ${proData.location}`;
 
         var grid = document.getElementById('fleetGrid');
         if(grid) {
-            var h = '';
-            if(data.vitoEnabled !== false) h += `
+            grid.innerHTML = proData.fleet.map(v => `
                 <div class="fleet-card">
-                    <div class="fleet-visual"><img src="/pro-package/images/vito.png" style="width:100%; height:100%; object-fit:cover;"> <span class="fleet-badge">VİP</span></div>
+                    <div class="fleet-visual"><img src="${v.image_path}" style="width:100%; height:100%; object-fit:cover;"> <span class="fleet-badge">VİP</span></div>
                     <div class="fleet-details">
-                        <h3>Mercedes Vito VIP</h3>
-                        <p style="font-size:0.85rem; color:var(--text-muted);">Özel tasarım VIP iç kabin ve geniş bagaj alanı.</p>
-                        <div class="fleet-specs"><span class="spec"><i class="fas fa-users"></i> 7 Yolcu</span><span class="spec"><i class="fas fa-snowflake"></i> Klima</span></div>
-                        <div class="fleet-price">${c}${data.vitoPrice || 850}'den</div>
+                        <h3>${v.label}</h3>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">${v.features ? v.features.join(', ') : 'VIP Donanım'}</p>
+                        <div class="fleet-specs"><span class="spec"><i class="fas fa-users"></i> ${v.capacity} Yolcu</span><span class="spec"><i class="fas fa-suitcase"></i> Bagaj</span></div>
+                        <div class="fleet-price">${c}${v.base_price}'den</div>
                     </div>
-                </div>`;
-            if(data.sprinterEnabled !== false) h += `
-                <div class="fleet-card">
-                    <div class="fleet-visual"><img src="/pro-package/images/sprinter.png" style="width:100%; height:100%; object-fit:cover;"> <span class="fleet-badge">Grup</span></div>
-                    <div class="fleet-details">
-                        <h3>Mercedes Sprinter VIP</h3>
-                        <p style="font-size:0.85rem; color:var(--text-muted);">Büyük gruplar için 12 kişilik konforlu transfer.</p>
-                        <div class="fleet-specs"><span class="spec"><i class="fas fa-users"></i> 12 Yolcu</span><span class="spec"><i class="fas fa-suitcase"></i> Bagaj</span></div>
-                        <div class="fleet-price">${c}${data.sprinterPrice || 1500}'den</div>
-                    </div>
-                </div>`;
-            grid.innerHTML = h;
+                </div>`).join('');
         }
 
         var rg = document.getElementById('routesGrid');
-        if(rg && data.routes) {
-            rg.innerHTML = data.routes.map(r => `
+        if(rg) {
+            rg.innerHTML = proData.routes.map(r => `
                 <div class="route-card">
-                    <div class="route-info"><h3>${r.airport} → ${r.location}</h3><p>${r.duration} | MB ${r.vehicle}</p></div>
+                    <div class="route-info"><h3>${r.airport_name} → ${r.location}</h3><p>VIP Vito</p></div>
                     <div class="price-tag">${c}${r.price}</div>
+                </div>
+            `).join('');
+        }
+
+        var tg = document.getElementById('testimonialsGrid');
+        if(tg) {
+            tg.innerHTML = proData.testimonials.map(t => `
+                <div class="testimonial-card">
+                    <div class="stars">${'★'.repeat(t.rating)}</div>
+                    <p style="font-size:0.9rem; font-style:italic; margin-bottom:16px;">"${t.comment}"</p>
+                    <div style="font-weight:800; font-size:0.85rem;">${t.customer_name}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${t.customer_title || 'Müşteri'}</div>
                 </div>
             `).join('');
         }
     }
 
-    populateDropdowns();
-    applySiteData();
+    window.addEventListener('load', load);
     switchLang('tr');
     </script>
 </body>

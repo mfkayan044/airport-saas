@@ -15,6 +15,7 @@
         .trip-btn.active { background: #3b82f6; color: white; border-color: #3b82f6; }
         .active-step { border-color: #3b82f6 !important; color: #0f172a !important; font-weight: 800; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 overflow-x-hidden antialiased font-['Plus_Jakarta_Sans']">
     <!-- Header -->
@@ -202,20 +203,46 @@
     <a href="/premium-package/admin.html" class="fixed bottom-8 right-8 w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:bg-blue-600 transition-all z-50 group" title="Panel"><i class="fas fa-cog group-hover:rotate-90 transition-transform"></i></a>
 
     <script>
+        const { createClient } = supabase;
+        const sb = createClient('https://nbzmixvtgxjqwvsjzwjk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iem1peHZ0Z3hqcXd2c2p6d2prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjU3MzIsImV4cCI6MjA5MDEwMTczMn0.ZeWBdBQvDJC7u-c8OqMp2Q9dPuvpxfLkt7vG8vQsRuM');
+        const SITE_KEY = 'premium';
+
         var eliteData = { 
-            airports: ['İstanbul Havalimanı (IST)', 'Sabiha Gökçen (SAW)'], 
-            districts: ['Sultanahmet', 'Taksim', 'Beşiktaş', 'Kadıköy', 'Şişli'], 
-            routes: [], currency: '₺', vitoEnabled: true, sprinterEnabled: true, 
-            vitoPrice: 1200, sprinterPrice: 2000, whatsapp: '905550000000', 
-            email: 'info@elitedrive.com', phone: '+90 555 000 00 00', reservations: []
+            airports: [], 
+            districts: [], 
+            routes: [], 
+            fleet: [],
+            currency: '₺', 
+            whatsapp: '', 
+            email: '', 
+            phone: '', 
+            reservations: []
         };
         var booking = { from:'', to:'', date:'', time:'', type:'Tek Yön', pax:1, car:null, names:[], tel:'', flight:'' };
 
-        function load() {
-            var raw = localStorage.getItem('eliteAdminData');
-            if(raw) eliteData = JSON.parse(raw);
-            else localStorage.setItem('eliteAdminData', JSON.stringify(eliteData));
-            syncUI();
+        async function load() {
+            try {
+                const [settings, airports, districts, fleet, routes] = await Promise.all([
+                    sb.from('site_settings').select('*').eq('site_key', SITE_KEY).single(),
+                    sb.from('airports').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
+                    sb.from('districts').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
+                    sb.from('fleet').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
+                    sb.from('routes').select('*').eq('site_key', SITE_KEY).eq('is_active', true)
+                ]);
+
+                if (settings.data) {
+                    eliteData = { ...eliteData, ...settings.data };
+                }
+                eliteData.airports = (airports.data || []).map(a => a.name);
+                eliteData.districts = (districts.data || []).map(d => d.name);
+                eliteData.fleet = fleet.data || [];
+                eliteData.routes = routes.data || [];
+                
+                syncUI();
+            } catch (err) {
+                console.error('Supabase Load Error:', err);
+                alert('Sistem verileri yüklenemedi. Lütfen internet bağlantınızı kontrol edin.');
+            }
         }
 
         function setTripType(t, btn) {
@@ -228,18 +255,22 @@
             const sels = [document.getElementById('selFrom'), document.getElementById('selTo')];
             const items = [...eliteData.airports, ...eliteData.districts];
             sels.forEach(s => {
+                if(!s) return;
                 const cur = s.value;
                 s.innerHTML = '<option value="" disabled selected>Nokta Seçiniz</option>' + items.map(i => `<option value="${i}">${i}</option>`).join('');
                 if(cur) s.value = cur;
             });
 
             const fg = document.getElementById('fleetDisplay');
-            fg.innerHTML = "";
-            if(eliteData.vitoEnabled) fg.innerHTML += renderCarCard('Mercedes Vito VIP', '7 Yolcu', '5 Bagaj', eliteData.vitoPrice, '/premium-package/images/vito.png', 'BUSINESS');
-            if(eliteData.sprinterEnabled) fg.innerHTML += renderCarCard('Mercedes Sprinter', '13 Yolcu', '10 Bagaj', eliteData.sprinterPrice, '/premium-package/images/sprinter.png', 'VAN');
+            if(fg) {
+                fg.innerHTML = "";
+                eliteData.fleet.forEach(v => {
+                    fg.innerHTML += renderCarCard(v.label, v.capacity + ' Yolcu', v.features ? v.features.join(', ') : 'VIP Donanım', v.base_price, v.image_path, v.vehicle_type === 'Vito' ? 'BUSINESS' : 'VAN');
+                });
+            }
 
-            document.getElementById('fPhone').textContent = eliteData.phone;
-            document.getElementById('fMail').textContent = eliteData.email;
+            if(document.getElementById('fPhone')) document.getElementById('fPhone').textContent = eliteData.phone;
+            if(document.getElementById('fMail')) document.getElementById('fMail').textContent = eliteData.email;
         }
 
         function renderCarCard(t, p, b, pr, img, cat) {
@@ -280,28 +311,33 @@
 
         function renderStage1() {
             updateStepHeader(1);
-            const found = eliteData.routes.find(r => (r.airport === booking.from && r.location === booking.to) || (r.location === booking.from && r.airport === booking.to));
-            let vp = found ? found.price : eliteData.vitoPrice;
-            let sp = found ? found.price + 500 : eliteData.sprinterPrice;
-            if(booking.type === 'Gidiş-Dönüş') { vp = Math.round(vp * 1.8); sp = Math.round(sp * 1.8); }
+            let carItems = "";
             
+            eliteData.fleet.forEach(type => {
+                const foundR = eliteData.routes.find(r => 
+                    (r.airport_name === booking.from && r.location === booking.to && r.vehicle_type === type.vehicle_type) || 
+                    (r.airport_name === booking.to && r.location === booking.from && r.vehicle_type === type.vehicle_type)
+                );
+
+                let price = foundR ? foundR.price : type.base_price;
+                if(booking.type === 'Gidiş-Dönüş') price = Math.round(price * 1.8);
+                
+                carItems += `
+                    <div class="bg-slate-50 p-10 rounded-[32px] border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all group" onclick="setCar('${type.label}', ${price}, '${type.vehicle_type}')">
+                        <img src="${type.image_path}" class="h-32 object-contain mx-auto mb-8 group-hover:scale-110 transition-transform">
+                        <h4 class="text-center font-black h-font text-xl uppercase tracking-widest text-slate-700">${type.label}</h4>
+                        <p class="text-center text-blue-600 font-extrabold text-2xl mt-3">${eliteData.currency}${price}</p>
+                    </div>`;
+            });
+
             document.getElementById('modalBody').innerHTML = `
                 <h3 class="text-2xl font-black h-font text-slate-900 text-center mb-10">Elite Sürüş Paketinizi Seçin</h3>
                 <div class="grid md:grid-cols-2 gap-8">
-                    <div class="bg-slate-50 p-10 rounded-[32px] border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all group" onclick="setCar('Vito', ${vp})">
-                        <img src="/premium-package/images/vito.png" class="h-32 object-contain mx-auto mb-8 group-hover:scale-110 transition-transform">
-                        <h4 class="text-center font-black h-font text-xl uppercase tracking-widest text-slate-700">Vito VIP 7+1</h4>
-                        <p class="text-center text-blue-600 font-extrabold text-2xl mt-3">${eliteData.currency}${vp}</p>
-                    </div>
-                    <div class="bg-slate-50 p-10 rounded-[32px] border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all group" onclick="setCar('Sprinter', ${sp})">
-                        <img src="/premium-package/images/sprinter.png" class="h-32 object-contain mx-auto mb-8 group-hover:scale-110 transition-transform">
-                        <h4 class="text-center font-black h-font text-xl uppercase tracking-widest text-slate-700">Sprinter 13+1</h4>
-                        <p class="text-center text-blue-600 font-extrabold text-2xl mt-3">${eliteData.currency}${sp}</p>
-                    </div>
+                    ${carItems}
                 </div>`;
         }
 
-        function setCar(t, p) { booking.car = { type:t, price:p }; renderStage2(); }
+        function setCar(t, p, vtype) { booking.car = { type:t, price:p, vehicle_type: vtype }; renderStage2(); }
 
         function renderStage2() {
             updateStepHeader(2);
@@ -365,25 +401,38 @@
                 </div>`;
         }
 
-        function confirmReservation() {
-            // Save to localStorage
-            const newRes = {
-                id: Math.floor(1000 + Math.random() * 9000).toString(),
-                name: booking.names[0] + (booking.pax > 1 ? ` (+${booking.pax - 1} Yolcu)` : ''),
-                phone: booking.tel,
-                from: booking.from,
-                to: booking.to,
-                date: booking.date,
-                time: booking.time,
-                vehicle: booking.car.type + ' VIP',
-                price: booking.car.price,
-                status: 'Onaylandı'
-            };
-            
-            eliteData.reservations = [newRes, ...(eliteData.reservations || [])];
-            localStorage.setItem('eliteAdminData', JSON.stringify(eliteData));
-            
-            renderStage4();
+        async function confirmReservation() {
+            const btn = document.querySelector('button[onclick="confirmReservation()"]');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> ONAYLANLIYOR...';
+
+            try {
+                const { data, error } = await sb.from('reservations').insert({
+                    site_key:       SITE_KEY,
+                    customer_name:  booking.names[0],
+                    customer_phone: booking.tel,
+                    flight_in:      booking.flight,
+                    from_location:  booking.from,
+                    to_location:    booking.to,
+                    transfer_date:  booking.date,
+                    transfer_time:  booking.time,
+                    trip_type:      booking.type === 'Gidiş-Dönüş' ? 'round_trip' : 'one_way',
+                    pax_count:      booking.pax,
+                    vehicle_type:   booking.car.type,
+                    total_price:    booking.car.price,
+                    status:         'Bekliyor'
+                }).select().single();
+
+                if (error) throw error;
+                
+                renderStage4();
+            } catch (err) {
+                console.error('Rezervasyon Hatası:', err);
+                alert('Rezervasyon sırasında bir hata oluştu: ' + (err.message || err.details || 'Bilinmeyen hata'));
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         }
 
         function renderStage4() {

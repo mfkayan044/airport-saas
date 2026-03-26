@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Admin | Yönetim Paneli</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #1e293b; --accent: #3b82f6; --bg: #f1f5f9; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: var(--primary); color: white; padding: 20px; }
+        .main { flex:1; padding: 40px; }
+        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 24px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        th { background: #f8fafc; font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 0.75rem; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+        .btn-primary { background: var(--accent); color: white; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>VIP Admin</h2>
+        <p style="font-size: 0.8rem; opacity: 0.6; margin-bottom: 30px;">Giriş Paketi Yönetimi</p>
+        <button onclick="location.reload()" class="btn btn-primary" style="width: 100%;">Tazele</button>
+    </aside>
+    <main class="main">
+        <div class="card">
+            <h2>Rezervasyon Talepleri</h2>
+            <p>Müşterilerin gönderdiği son talepler bu listede görünür.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Müşteri</th>
+                        <th>Tarih</th>
+                        <th>Rota</th>
+                        <th>Durum</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsTable">
+                    <tr><td colspan="5" style="text-align:center;">Yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>İletişim Ayarları</h2>
+            <div id="settingsForm"></div>
+        </div>
+    </main>
+
+    <script>
+        const { createClient } = supabase;
+        const sb = createClient('https://nbzmixvtgxjqwvsjzwjk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iem1peHZ0Z3hqcXd2c2p6d2prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjU3MzIsImV4cCI6MjA5MDEwMTczMn0.ZeWBdBQvDJC7u-c8OqMp2Q9dPuvpxfLkt7vG8vQsRuM');
+        const SITE_KEY = 'basic';
+
+        async function init() {
+            await loadLeads();
+            await loadSettings();
+        }
+
+        async function loadLeads() {
+            const { data } = await sb.from('reservations').select('*').eq('site_key', SITE_KEY).order('created_at', { ascending: false });
+            const tbody = document.getElementById('leadsTable');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Henüz talep yok.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(r => `
+                <tr>
+                    <td><strong>${r.customer_name}</strong><br><small>${r.customer_phone}</small></td>
+                    <td>${r.transfer_date}</td>
+                    <td>${r.from_location} → ${r.to_location}</td>
+                    <td><span class="badge badge-pending">${r.status}</span></td>
+                    <td><button onclick="updateStatus('${r.id}')" class="btn btn-primary">Onayla</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function updateStatus(id) {
+            await sb.from('reservations').update({ status: 'Onaylandı' }).eq('id', id);
+            loadLeads();
+        }
+
+        async function loadSettings() {
+            const { data } = await sb.from('site_settings').select('*').eq('site_key', SITE_KEY).single();
+            const area = document.getElementById('settingsForm');
+            if (!data) return;
+            area.innerHTML = `
+                <div style="display:grid; gap: 15px; margin-top:20px;">
+                    <div><label>WhatsApp:</label><br><input id="sWa" value="${data.whatsapp}" style="width:100%; padding:8px;"></div>
+                    <div><label>E-Posta:</label><br><input id="sEmail" value="${data.email}" style="width:100%; padding:8px;"></div>
+                    <div><label>Telefon:</label><br><input id="sPhone" value="${data.phone}" style="width:100%; padding:8px;"></div>
+                    <button onclick="saveSettings()" class="btn btn-primary">Ayarları Kaydet</button>
+                </div>
+            `;
+        }
+
+        async function saveSettings() {
+            await sb.from('site_settings').update({
+                whatsapp: document.getElementById('sWa').value,
+                email: document.getElementById('sEmail').value,
+                phone: document.getElementById('sPhone').value
+            }).eq('site_key', SITE_KEY);
+            alert('Ayarlar kaydedildi!');
+            loadSettings();
+        }
+
+        init();
+        sb.channel('basic-admin').on('postgres_changes', { event: '*', schema: 'public' }, () => init()).subscribe();
+    </script>
+</body>
+</html>

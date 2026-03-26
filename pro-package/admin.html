@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProTrans Admin | Yönetim Paneli</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -368,156 +369,132 @@
         setTimeout(function(){ t.style.display='none'; }, 3000);
     }
 
-    // ===== DATA =====
-    var STORAGE_KEY = 'proAdminData';
+    const { createClient } = supabase;
+    const sb = createClient('https://nbzmixvtgxjqwvsjzwjk.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iem1peHZ0Z3hqcXd2c2p6d2prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjU3MzIsImV4cCI6MjA5MDEwMTczMn0.ZeWBdBQvDJC7u-c8OqMp2Q9dPuvpxfLkt7vG8vQsRuM');
+    const SITE_KEY = 'pro';
 
-    var defaultData = {
-        currency: '₺',
-        phone: '+90 212 999 88 77',
-        email: 'destek@protrans.com',
-        location: 'İstanbul, Türkiye',
-        whatsapp: '905000000000',
-        vitoEnabled: true,
-        sprinterEnabled: true,
-        vitoPrice: 850,
-        sprinterPrice: 1500,
-        airports: ['İstanbul Havalimanı (IST)', 'Sabiha Gökçen (SAW)'],
-        districts: ['Sultanahmet', 'Taksim', 'Beşiktaş', 'Kadıköy', 'Şişli', 'Bebek', 'Bakırköy', 'Fatih', 'Üsküdar', 'Beylikdüzü'],
-        routes: [
-            { airport:'İstanbul Havalimanı (IST)', location:'Sultanahmet', vehicle:'Vito', duration:'~45 dk', price:850 },
-            { airport:'Sabiha Gökçen (SAW)', location:'Taksim', vehicle:'Vito', duration:'~60 dk', price:1100 },
-            { airport:'İstanbul Havalimanı (IST)', location:'Beşiktaş', vehicle:'Vito', duration:'~40 dk', price:900 },
-            { airport:'Sabiha Gökçen (SAW)', location:'Kadıköy', vehicle:'Vito', duration:'~30 dk', price:650 },
-            { airport:'İstanbul Havalimanı (IST)', location:'Şişli', vehicle:'Vito', duration:'~35 dk', price:800 },
-            { airport:'İstanbul Havalimanı (IST)', location:'Bebek', vehicle:'Vito', duration:'~45 dk', price:950 }
-        ],
-        testimonials: [
-            { name:'Ahmet Kaya', role:'Şirket Müdürü', text:'İş toplantılarım için her zaman ProTrans\'ı tercih ediyorum. Zamanında, nazik şoförler.', stars:5 },
-            { name:'Zeynep Limon', role:'Turist', text:'Aile tatilimiz için VIP Van kiraladık. Çocuk koltuğu dahil her detay düşünülmüştü.', stars:5 }
-        ]
-    };
+    var siteData = { currency: '₺', airports: [], districts: [], routes: [], fleet: [], testimonials: [], reservations: [] };
 
-    function loadData() {
-        var d = localStorage.getItem(STORAGE_KEY);
-        if (d) {
-            var parsed = JSON.parse(d);
-            // Migrate old data
-            if (!parsed.currency) parsed.currency = '₺';
-            if (!parsed.airports) parsed.airports = defaultData.airports;
-            if (!parsed.districts) parsed.districts = defaultData.districts;
-            // Migrate old route format
-            if (parsed.routes && parsed.routes[0] && parsed.routes[0].from) {
-                parsed.routes = parsed.routes.map(function(r) {
-                    return { airport: r.from || r.airport, location: r.to || r.location, vehicle: r.vehicle, duration: r.duration, price: r.price };
-                });
-            }
-            return parsed;
+    async function loadData() {
+        try {
+            const [settings, airports, districts, fleet, routes, testimonials, reservations] = await Promise.all([
+                sb.from('site_settings').select('*').eq('site_key', SITE_KEY).single(),
+                sb.from('airports').select('*').eq('site_key', SITE_KEY),
+                sb.from('districts').select('*').eq('site_key', SITE_KEY),
+                sb.from('fleet').select('*').eq('site_key', SITE_KEY),
+                sb.from('routes').select('*').eq('site_key', SITE_KEY),
+                sb.from('testimonials').select('*').eq('site_key', SITE_KEY),
+                sb.from('reservations').select('*').eq('site_key', SITE_KEY).order('created_at', { ascending: false })
+            ]);
+
+            siteData = {
+                ...(settings.data || {}),
+                airports: airports.data || [],
+                districts: districts.data || [],
+                fleet: fleet.data || [],
+                routes: routes.data || [],
+                testimonials: testimonials.data || [],
+                reservations: reservations.data || []
+            };
+            return siteData;
+        } catch (err) {
+            console.error('Fetch Error:', err);
         }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-        return JSON.parse(JSON.stringify(defaultData));
     }
 
-    function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    function getCurr() { return siteData.currency || '₺'; }
 
-    var data = loadData();
-
-    function getCurr() { return data.currency || '₺'; }
+    // Realtime channel
+    sb.channel('pro-updates').on('postgres_changes', { event: '*', schema: 'public' }, () => {
+        refreshAll();
+    }).subscribe();
 
     // ===== DASHBOARD =====
-    function refreshDashboard() {
-        var d = loadData();
-        document.getElementById('statRoutes').textContent = d.routes.length;
-        var v = 0; if(d.vitoEnabled) v++; if(d.sprinterEnabled) v++;
+    async function refreshDashboard() {
+        await loadData();
+        document.getElementById('statRoutes').textContent = siteData.routes.length;
+        var v = siteData.fleet.filter(f => f.is_active).length;
         document.getElementById('statVehicles').textContent = v;
-        document.getElementById('statReviews').textContent = d.testimonials.length;
-        var avg = d.routes.length > 0 ? Math.round(d.routes.reduce(function(s,r){return s+r.price;},0)/d.routes.length) : 0;
+        document.getElementById('statReviews').textContent = siteData.testimonials.length;
+        var avg = siteData.routes.length > 0 ? Math.round(siteData.routes.reduce(function(s,r){return s+r.price;},0)/siteData.routes.length) : 0;
         document.getElementById('statAvgPrice').textContent = getCurr() + avg;
 
         var html = '';
-        d.routes.slice(-5).reverse().forEach(function(r) {
+        siteData.routes.slice(-5).reverse().forEach(function(r) {
             html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;">' +
-                '<div><span style="font-weight:600;">' + r.airport + '</span> <span style="color:#94a3b8;margin:0 8px;">→</span> <span style="font-weight:600;">' + r.location + '</span></div>' +
-                '<div><span class="badge badge-blue">' + r.vehicle + '</span> <span style="font-weight:800;color:#059669;margin-left:12px;">' + getCurr() + r.price + '</span></div></div>';
+                   '<div><span style="font-weight:600;">' + r.airport_name + '</span> <span style="color:#94a3b8;margin:0 8px;">→</span> <span style="font-weight:600;">' + r.location + '</span></div>' +
+                   '<div><span class="badge badge-blue">' + r.vehicle_type + '</span> <span style="font-weight:800;color:#059669;margin-left:12px;">' + getCurr() + r.price + '</span></div></div>';
         });
         document.getElementById('dashboardRoutes').innerHTML = html || '<p style="color:#94a3b8;text-align:center;padding:20px;">Henüz güzergah eklenmemiş.</p>';
     }
 
     // ===== LOCATIONS =====
-    function renderLocations() {
-        var d = loadData();
+    async function renderLocations() {
+        await loadData();
         var ah = '';
-        d.airports.forEach(function(a, i) {
-            ah += '<span class="tag"><i class="fas fa-plane" style="color:#3b82f6;"></i> ' + a + ' <span class="remove" onclick="removeAirport(' + i + ')">×</span></span>';
+        siteData.airports.forEach(function(a) {
+            ah += '<span class="tag"><i class="fas fa-plane" style="color:#3b82f6;"></i> ' + a.name + ' <span class="remove" onclick="removeAirport(\'' + a.id + '\')">×</span></span>';
         });
         document.getElementById('airportsList').innerHTML = ah || '<p style="color:#94a3b8;">Henüz havalimanı eklenmemiş.</p>';
 
         var dh = '';
-        d.districts.forEach(function(loc, i) {
-            dh += '<span class="tag"><i class="fas fa-map-marker-alt" style="color:#10b981;"></i> ' + loc + ' <span class="remove" onclick="removeDistrict(' + i + ')">×</span></span>';
+        siteData.districts.forEach(function(loc) {
+            dh += '<span class="tag"><i class="fas fa-map-marker-alt" style="color:#10b981;"></i> ' + loc.name + ' <span class="remove" onclick="removeDistrict(\''+ loc.id +'\')">×</span></span>';
         });
         document.getElementById('districtsList').innerHTML = dh || '<p style="color:#94a3b8;">Henüz lokasyon eklenmemiş.</p>';
     }
 
-    function addAirport() {
+    async function addAirport() {
         var v = document.getElementById('newAirport').value.trim();
         if (!v) return;
-        var d = loadData();
-        d.airports.push(v);
-        saveData(d);
+        await sb.from('airports').insert({ name: v, site_key: SITE_KEY });
         document.getElementById('newAirport').value = '';
         renderLocations();
         toast('Havalimanı eklendi!');
     }
 
-    function removeAirport(i) {
-        var d = loadData();
-        d.airports.splice(i, 1);
-        saveData(d);
+    async function removeAirport(id) {
+        await sb.from('airports').delete().eq('id', id);
         renderLocations();
     }
 
-    function addDistrict() {
+    async function addDistrict() {
         var v = document.getElementById('newDistrict').value.trim();
         if (!v) return;
-        var d = loadData();
-        d.districts.push(v);
-        saveData(d);
+        await sb.from('districts').insert({ name: v, site_key: SITE_KEY });
         document.getElementById('newDistrict').value = '';
         renderLocations();
         toast('Lokasyon eklendi!');
     }
 
-    function removeDistrict(i) {
-        var d = loadData();
-        d.districts.splice(i, 1);
-        saveData(d);
+    async function removeDistrict(id) {
+        await sb.from('districts').delete().eq('id', id);
         renderLocations();
     }
 
     // ===== ROUTES =====
     function populateRouteDropdowns() {
-        var d = loadData();
         var aSelect = document.getElementById('rAirport');
         var lSelect = document.getElementById('rLocation');
         aSelect.innerHTML = '';
         lSelect.innerHTML = '';
-        d.airports.forEach(function(a) { aSelect.innerHTML += '<option>' + a + '</option>'; });
-        d.districts.forEach(function(loc) { lSelect.innerHTML += '<option>' + loc + '</option>'; });
+        siteData.airports.forEach(function(a) { aSelect.innerHTML += '<option>' + a.name + '</option>'; });
+        siteData.districts.forEach(function(loc) { lSelect.innerHTML += '<option>' + loc.name + '</option>'; });
         document.getElementById('rCurrLabel').textContent = getCurr();
     }
 
-    function renderRoutes() {
-        var d = loadData();
+    async function renderRoutes() {
+        await loadData();
         var c = getCurr();
         var html = '';
-        d.routes.forEach(function(r, i) {
+        siteData.routes.forEach(function(r) {
             html += '<tr>' +
-                '<td style="font-weight:600;"><i class="fas fa-plane" style="color:#3b82f6;margin-right:8px;font-size:0.8rem;"></i>' + r.airport + '</td>' +
+                '<td style="font-weight:600;"><i class="fas fa-plane" style="color:#3b82f6;margin-right:8px;font-size:0.8rem;"></i>' + r.airport_name + '</td>' +
                 '<td style="font-weight:600;">' + r.location + '</td>' +
-                '<td><span class="badge badge-blue">' + r.vehicle + '</span></td>' +
-                '<td>' + r.duration + '</td>' +
+                '<td><span class="badge badge-blue">' + r.vehicle_type + '</span></td>' +
+                '<td>Tahmini ~45 dk</td>' +
                 '<td style="font-weight:800;color:#059669;">' + c + r.price + '</td>' +
-                '<td style="text-align:right;"><button class="btn btn-danger btn-sm" onclick="deleteRoute(' + i + ')"><i class="fas fa-trash"></i></button></td></tr>';
+                '<td style="text-align:right;"><button class="btn btn-danger btn-sm" onclick="deleteRoute(\'' + r.id + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         });
         document.getElementById('routesTableBody').innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:32px;">Henüz güzergah eklenmemiş.</td></tr>';
     }
@@ -528,82 +505,101 @@
         if (el.style.display === 'block') populateRouteDropdowns();
     }
 
-    function saveRoute() {
-        var d = loadData();
+    async function saveRoute() {
         var airport = document.getElementById('rAirport').value;
         var location = document.getElementById('rLocation').value;
         var price = parseInt(document.getElementById('rPrice').value);
         if (!airport || !location || !price) { alert('Tüm alanları doldurun.'); return; }
-        d.routes.push({
-            airport: airport,
+        
+        await sb.from('routes').insert({
+            site_key: SITE_KEY,
+            airport_name: airport,
             location: location,
-            vehicle: document.getElementById('rVehicle').value,
-            duration: document.getElementById('rDuration').value || '~40 dk',
+            vehicle_type: document.getElementById('rVehicle').value,
             price: price
         });
-        saveData(d);
+
         toggleRouteForm();
         renderRoutes();
         refreshDashboard();
         toast('Güzergah eklendi!');
         document.getElementById('rPrice').value = '';
-        document.getElementById('rDuration').value = '';
     }
 
-    function deleteRoute(i) {
+    async function deleteRoute(id) {
         if (!confirm('Bu güzergahı silmek istediğinize emin misiniz?')) return;
-        var d = loadData();
-        d.routes.splice(i, 1);
-        saveData(d);
+        await sb.from('routes').delete().eq('id', id);
         renderRoutes();
         refreshDashboard();
         toast('Güzergah silindi.');
     }
 
     // ===== FLEET =====
-    function loadFleet() {
-        var d = loadData();
-        document.getElementById('fleetVito').checked = d.vitoEnabled;
-        document.getElementById('fleetSprinter').checked = d.sprinterEnabled;
-        document.getElementById('fleetVitoPrice').value = d.vitoPrice;
-        document.getElementById('fleetSprinterPrice').value = d.sprinterPrice;
+    async function loadFleet() {
+        await loadData();
+        var vito = siteData.fleet.find(f => f.vehicle_type === 'Vito');
+        var spr = siteData.fleet.find(f => f.vehicle_type === 'Sprinter');
+        
+        if (vito) {
+            document.getElementById('fleetVito').checked = vito.is_active;
+            document.getElementById('fleetVitoPrice').value = vito.base_price;
+        }
+        if (spr) {
+            document.getElementById('fleetSprinter').checked = spr.is_active;
+            document.getElementById('fleetSprinterPrice').value = spr.base_price;
+        }
         document.querySelectorAll('.currSymbol').forEach(function(el){ el.textContent = getCurr(); });
     }
 
-    function saveFleet() {
-        var d = loadData();
-        d.vitoEnabled = document.getElementById('fleetVito').checked;
-        d.sprinterEnabled = document.getElementById('fleetSprinter').checked;
-        d.vitoPrice = parseInt(document.getElementById('fleetVitoPrice').value) || 850;
-        d.sprinterPrice = parseInt(document.getElementById('fleetSprinterPrice').value) || 1500;
-        saveData(d);
+    async function saveFleet() {
+        var vito = siteData.fleet.find(f => f.vehicle_type === 'Vito');
+        var spr = siteData.fleet.find(f => f.vehicle_type === 'Sprinter');
+        
+        if (vito) {
+            await sb.from('fleet').update({ 
+                is_active: document.getElementById('fleetVito').checked,
+                base_price: parseInt(document.getElementById('fleetVitoPrice').value)
+            }).eq('id', vito.id);
+        }
+        if (spr) {
+            await sb.from('fleet').update({ 
+                is_active: document.getElementById('fleetSprinter').checked,
+                base_price: parseInt(document.getElementById('fleetSprinterPrice').value)
+            }).eq('id', spr.id);
+        }
+        
         refreshDashboard();
         toast('Araç ayarları güncellendi.');
     }
 
     // ===== REVIEWS =====
-    function renderReviews() {
-        var d = loadData();
+    async function renderReviews() {
+        await loadData();
         var html = '';
-        d.testimonials.forEach(function(t, i) {
-            var stars = '';
-            for (var s = 0; s < t.stars; s++) stars += '⭐';
-            html += '<tr><td style="font-weight:600;">' + t.name + '</td><td>' + t.role + '</td>' +
-                '<td style="max-width:300px;">' + t.text.substring(0,60) + '...</td><td>' + stars + '</td>' +
-                '<td style="text-align:right;"><button class="btn btn-danger btn-sm" onclick="deleteReview(' + i + ')"><i class="fas fa-trash"></i></button></td></tr>';
+        siteData.testimonials.forEach(function(t) {
+            var stars = '⭐'.repeat(t.rating);
+            html += '<tr><td style="font-weight:600;">' + t.customer_name + '</td><td>' + (t.customer_title || 'Müşteri') + '</td>' +
+                '<td style="max-width:300px;">' + t.comment.substring(0,60) + '...</td><td>' + stars + '</td>' +
+                '<td style="text-align:right;"><button class="btn btn-danger btn-sm" onclick="deleteReview(\'' + t.id + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         });
         document.getElementById('reviewsTableBody').innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:32px;">Henüz yorum eklenmemiş.</td></tr>';
     }
 
     function toggleReviewForm() { var el = document.getElementById('reviewFormArea'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
 
-    function saveReview() {
-        var d = loadData();
+    async function saveReview() {
         var name = document.getElementById('revName').value;
         var text = document.getElementById('revText').value;
         if (!name || !text) { alert('Ad ve yorum giriniz.'); return; }
-        d.testimonials.push({ name: name, role: document.getElementById('revRole').value, text: text, stars: parseInt(document.getElementById('revStars').value)||5 });
-        saveData(d);
+        
+        await sb.from('testimonials').insert({
+            site_key: SITE_KEY,
+            customer_name: name,
+            customer_title: document.getElementById('revRole').value,
+            comment: text,
+            rating: parseInt(document.getElementById('revStars').value)||5
+        });
+
         toggleReviewForm();
         renderReviews();
         refreshDashboard();
@@ -613,80 +609,56 @@
         document.getElementById('revText').value = '';
     }
 
-    function deleteReview(i) {
+    async function deleteReview(id) {
         if (!confirm('Silmek istediğinize emin misiniz?')) return;
-        var d = loadData();
-        d.testimonials.splice(i, 1);
-        saveData(d);
+        await sb.from('testimonials').delete().eq('id', id);
         renderReviews();
         toast('Yorum silindi.');
     }
 
     // ===== CONTACT =====
-    function loadContact() {
-        var d = loadData();
-        document.getElementById('contactPhone').value = d.phone;
-        document.getElementById('contactEmail').value = d.email;
-        document.getElementById('contactLocation').value = d.location;
-        document.getElementById('contactWhatsapp').value = d.whatsapp || '905000000000';
+    async function loadContact() {
+        await loadData();
+        document.getElementById('contactPhone').value = siteData.phone;
+        document.getElementById('contactEmail').value = siteData.email;
+        document.getElementById('contactLocation').value = siteData.location;
+        document.getElementById('contactWhatsapp').value = siteData.whatsapp || '905000000000';
     }
 
-    function saveContact() {
-        var d = loadData();
-        d.phone = document.getElementById('contactPhone').value;
-        d.email = document.getElementById('contactEmail').value;
-        d.location = document.getElementById('contactLocation').value;
-        d.whatsapp = document.getElementById('contactWhatsapp').value;
-        saveData(d);
+    async function saveContact() {
+        await sb.from('site_settings').update({
+            phone: document.getElementById('contactPhone').value,
+            email: document.getElementById('contactEmail').value,
+            location: document.getElementById('contactLocation').value,
+            whatsapp: document.getElementById('contactWhatsapp').value
+        }).eq('site_key', SITE_KEY);
         toast('İletişim bilgileri güncellendi!');
     }
 
     // ===== SETTINGS =====
-    function loadSettings() {
-        var d = loadData();
-        document.getElementById('settingsCurrency').value = d.currency || '₺';
+    async function loadSettings() {
+        await loadData();
+        document.getElementById('settingsCurrency').value = siteData.currency || '₺';
     }
 
-    function saveCurrency() {
-        var d = loadData();
-        d.currency = document.getElementById('settingsCurrency').value;
-        saveData(d);
-        data = d;
+    async function saveCurrency() {
+        await sb.from('site_settings').update({ currency: document.getElementById('settingsCurrency').value }).eq('site_key', SITE_KEY);
         refreshAll();
-        toast('Para birimi güncellendi: ' + d.currency);
+        toast('Para birimi güncellendi!');
     }
 
-    function exportData() {
-        var d = loadData();
-        var blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'protrans-admin-verileri.json';
-        a.click();
-        toast('Veriler indirildi!');
+    async function refreshTab(tab) {
+        if (tab==='dashboard') await refreshDashboard();
+        else if (tab==='locations') await renderLocations();
+        else if (tab==='routes') await renderRoutes();
+        else if (tab==='fleet') await loadFleet();
+        else if (tab==='reviews') await renderReviews();
+        else if (tab==='contact') await loadContact();
+        else if (tab==='settings') await loadSettings();
     }
 
-    function resetData() {
-        if (!confirm('Tüm veriler sıfırlanacak! Emin misiniz?')) return;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-        data = loadData();
-        refreshAll();
-        toast('Fabrika ayarlarına döndürüldü.');
-    }
-
-    // ===== REFRESH =====
-    function refreshTab(tab) {
-        if (tab==='dashboard') refreshDashboard();
-        else if (tab==='locations') renderLocations();
-        else if (tab==='routes') renderRoutes();
-        else if (tab==='fleet') loadFleet();
-        else if (tab==='reviews') renderReviews();
-        else if (tab==='contact') loadContact();
-        else if (tab==='settings') loadSettings();
-    }
-
-    function refreshAll() {
-        refreshDashboard(); renderLocations(); renderRoutes(); loadFleet(); renderReviews(); loadContact(); loadSettings();
+    async function refreshAll() {
+        await Promise.all([refreshDashboard(), renderLocations(), renderRoutes(), loadFleet(), renderReviews(), loadContact(), loadSettings()]);
     }
 
     refreshAll();
