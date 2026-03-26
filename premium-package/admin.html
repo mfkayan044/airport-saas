@@ -236,14 +236,25 @@
                                 </table>
                             </div>
                         </div>
-                        <div className="card p-10 bg-slate-900 text-white relative overflow-hidden">
-                            <i className="fas fa-shield-check absolute -bottom-10 -right-10 text-[200px] opacity-10"></i>
-                            <h3 className="text-xl font-black h-font mb-10 tracking-tighter">Operasyonel Güç</h3>
+                        <div className="card p-10 bg-blue-600 text-white relative overflow-hidden shadow-2xl shadow-blue-500/20">
+                            <i className="fas fa-id-badge absolute -bottom-10 -right-10 text-[200px] opacity-10"></i>
+                            <h3 className="text-xl font-black h-font mb-10 tracking-tighter uppercase italic">Sürücü & Filo Durumu</h3>
                             <div className="space-y-8 relative z-10">
-                                <div><p className="text-[10px] font-black opacity-50 uppercase mb-2">Günlük Hedef</p><div className="w-full bg-white/10 h-2 rounded-full"><div className="w-[75%] bg-blue-500 h-full rounded-full shadow-lg shadow-blue-500/50"></div></div><p className="text-right text-[10px] mt-2 font-black">75%</p></div>
-                                <div><p className="text-[10px] font-black opacity-50 uppercase mb-2">Bölgesel Yoğunluk</p><p className="font-black h-font text-3xl italic tracking-widest">TAK<span className="text-blue-500">SIM</span></p></div>
-                                <hr className="opacity-10" />
-                                <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-white/10 transition-all">Sistem Raporu Al</button>
+                                <div className="flex justify-between items-center bg-white/10 p-4 rounded-2xl border border-white/10">
+                                    <div>
+                                        <p className="text-[10px] font-black opacity-60 uppercase mb-1 tracking-widest">Aktif Sürücü</p>
+                                        <p className="text-2xl font-black h-font">{data.drivers.filter(d=>d.is_active).length} / {data.drivers.length}</p>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl"><i className="fas fa-user-check"></i></div>
+                                </div>
+                                <div className="flex justify-between items-center bg-white/10 p-4 rounded-2xl border border-white/10">
+                                    <div>
+                                        <p className="text-[10px] font-black opacity-60 uppercase mb-1 tracking-widest">Filo Doluluk</p>
+                                        <p className="text-2xl font-black h-font">%85</p>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl"><i className="fas fa-chart-pie"></i></div>
+                                </div>
+                                <button className="w-full py-5 bg-white text-blue-600 rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-slate-50 transition-all shadow-xl shadow-black/10">OPERASYON RAPORU</button>
                             </div>
                         </div>
                     </div>
@@ -480,16 +491,18 @@
                     {data.reservations.length > 0 ? [...data.reservations].sort((a,b) => new Date(a.transfer_date) - new Date(b.transfer_date)).map(r => (
                         <div key={r.id} className="relative group">
                             <div className="absolute -left-[50px] w-6 h-6 rounded-full bg-white border-4 border-blue-600 z-10 group-hover:scale-125 transition-transform"></div>
-                            <div className="card p-8 group-hover:border-blue-200 transition-all shadow-sm">
+                            <div className="card p-10 group-hover:border-blue-300 transition-all shadow-xl bg-white border border-slate-100">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">{r.transfer_date} @ {r.transfer_time}</p>
-                                        <h4 className="text-lg font-black h-font tracking-tighter uppercase">{r.customer_name}</h4>
-                                        <p className="text-sm font-bold text-slate-500 mt-2 uppercase italic">{r.from_location} ➔ {r.to_location}</p>
+                                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2"><i className="far fa-clock"></i> {r.transfer_date} @ {r.transfer_time}</p>
+                                        <h4 className="text-xl font-black h-font tracking-tighter uppercase text-slate-800 italic">{r.customer_name}</h4>
+                                        <p className="text-sm font-bold text-slate-400 mt-3 uppercase tracking-tight flex items-center gap-2">
+                                            <i className="fas fa-map-marker-alt text-blue-500"></i> {r.from_location} <i className="fas fa-long-arrow-alt-right opacity-30"></i> {r.to_location}
+                                        </p>
                                     </div>
                                     <div className="text-right">
-                                         <span className="bg-slate-50 px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-500">{r.vehicle_type}</span>
-                                         <p className="text-xl font-black text-slate-900 h-font mt-3 italic">{data.currency}{r.total_price}</p>
+                                         <span className="bg-slate-100 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase text-slate-600 border border-slate-200">{r.vehicle_type}</span>
+                                         <p className="text-2xl font-black text-blue-600 h-font mt-4 italic tracking-tighter">{data.currency}{r.total_price}</p>
                                     </div>
                                 </div>
                             </div>
