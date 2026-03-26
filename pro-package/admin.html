@@ -552,22 +552,26 @@
     }
 
     async function saveFleet() {
-        var vito = siteData.fleet.find(f => f.vehicle_type === 'Vito');
-        var spr = siteData.fleet.find(f => f.vehicle_type === 'Sprinter');
+        // Find vehicles by type OR by label fallback
+        var vito = siteData.fleet.find(f => f.vehicle_type === 'Vito' || f.label.includes('Vito'));
+        var spr = siteData.fleet.find(f => f.vehicle_type === 'Sprinter' || f.label.includes('Sprinter'));
         
         if (vito) {
             await sb.from('fleet').update({ 
                 is_active: document.getElementById('fleetVito').checked,
-                base_price: parseInt(document.getElementById('fleetVitoPrice').value)
+                base_price: parseInt(document.getElementById('fleetVitoPrice').value),
+                vehicle_type: 'Vito' // Sync type back
             }).eq('id', vito.id);
         }
         if (spr) {
             await sb.from('fleet').update({ 
                 is_active: document.getElementById('fleetSprinter').checked,
-                base_price: parseInt(document.getElementById('fleetSprinterPrice').value)
+                base_price: parseInt(document.getElementById('fleetSprinterPrice').value),
+                vehicle_type: 'Sprinter' // Sync type back
             }).eq('id', spr.id);
         }
         
+        await loadData();
         refreshDashboard();
         toast('Araç ayarları güncellendi.');
     }
