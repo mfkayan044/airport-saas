@@ -449,6 +449,21 @@
         } catch (err) { console.error('DB Insert Error:', err); }
     }
 
+    function generateMessage() {
+        var c = getCurrency();
+        var total = bookingData.route ? (bookingData.trip === 'round_trip' ? bookingData.route.price * 2 : bookingData.route.price) : 'Fiyat Sorunuz';
+        var msg = `🚗 *YENİ TRANSFER REZERVASYONU*\n\n`;
+        msg += `*Müşteri:* ${bookingData.passengers.join(', ')}\n`;
+        msg += `*İletişim:* ${bookingData.tel} / ${bookingData.email}\n`;
+        msg += `*Güzergah:* ${bookingData.airport} ➔ ${bookingData.district}\n`;
+        msg += `*Tarih:* ${bookingData.date}\n`;
+        msg += `*Kişi:* ${bookingData.pax}\n`;
+        msg += `*Tip:* ${bookingData.trip === 'round_trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}\n`;
+        msg += `*Uçuş:* ${bookingData.flightIn} ${bookingData.flightOut ? '/ ' + bookingData.flightOut : ''}\n\n`;
+        msg += `*TOPLAM TUTAR:* ${bookingData.route ? c+total : total}`;
+        return msg;
+    }
+
     function sendWhatsApp() {
         insertBooking();
         var wa = proData.whatsapp || '905000000000';
