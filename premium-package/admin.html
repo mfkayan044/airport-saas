@@ -243,7 +243,7 @@
                                 <div className="flex justify-between items-center bg-white/10 p-4 rounded-2xl border border-white/10">
                                     <div>
                                         <p className="text-[10px] font-black opacity-60 uppercase mb-1 tracking-widest">Aktif Sürücü</p>
-                                        <p className="text-2xl font-black h-font">{data.drivers.filter(d=>d.is_active).length} / {data.drivers.length}</p>
+                                        <p className="text-2xl font-black h-font">{(data.drivers || []).filter(d=>d.is_active).length} / {(data.drivers || []).length}</p>
                                     </div>
                                     <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl"><i className="fas fa-user-check"></i></div>
                                 </div>
