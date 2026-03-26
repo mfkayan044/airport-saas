@@ -55,14 +55,15 @@
             const sync = async () => {
                 setRefreshing(true);
                 try {
-                    const [settings, airports, districts, fleet, routes, testimonials, reservations] = await Promise.all([
+                    const [settings, airports, districts, fleet, routes, testimonials, reservations, drivers] = await Promise.all([
                         sb.from('site_settings').select('*').eq('site_key', SITE_KEY).single(),
                         sb.from('airports').select('*').eq('site_key', SITE_KEY),
                         sb.from('districts').select('*').eq('site_key', SITE_KEY),
                         sb.from('fleet').select('*').eq('site_key', SITE_KEY),
                         sb.from('routes').select('*').eq('site_key', SITE_KEY),
                         sb.from('testimonials').select('*').eq('site_key', SITE_KEY),
-                        sb.from('reservations').select('*').eq('site_key', SITE_KEY).order('created_at', { ascending: false })
+                        sb.from('reservations').select('*').eq('site_key', SITE_KEY).order('created_at', { ascending: false }),
+                        sb.from('drivers').select('*').eq('site_key', SITE_KEY)
                     ]);
 
                     setData({
@@ -72,7 +73,8 @@
                         fleet: fleet.data || [],
                         routes: routes.data || [],
                         testimonials: testimonials.data || [],
-                        reservations: reservations.data || []
+                        reservations: reservations.data || [],
+                        drivers: drivers.data || []
                     });
                 } catch (err) {
                     console.error('Sync Error:', err);
@@ -108,16 +110,17 @@
                             <h2 className="text-2xl font-black h-font tracking-tighter text-slate-900 italic">ELITE<span class="text-blue-600">DRIVE</span></h2>
                             <p className="text-[9px] text-slate-400 font-black tracking-widest uppercase mt-2">Intelligence Hub v2.0</p>
                         </div>
-                      <nav className="flex-1 overflow-y-auto py-8">
-                        <SidebarItem id="dashboard" icon="fa-th-large" label="Kontrol Paneli" />
-                        <SidebarItem id="bookings" icon="fa-calendar-check" label="Rezervasyonlar" />
-                        <SidebarItem id="timeline" icon="fa-stream" label="Rezervasyon Takip" />
-                        <SidebarItem id="customers" icon="fa-users" label="Müşteri Rehberi (CRM)" />
-                        <SidebarItem id="routes" icon="fa-map-marked-alt" label="Güzergah & Fiyat" />
-                        <SidebarItem id="locations" icon="fa-map-pin" label="Bölgeler & İller" />
-                        <SidebarItem id="fleet" icon="fa-car" label="Araç Yönetimi" />
-                        <SidebarItem id="settings" icon="fa-cog" label="Site Ayarları" />
-                    </nav>
+                        <nav className="flex-1 overflow-y-auto py-8">
+                            <SidebarItem id="dashboard" icon="fa-th-large" label="Kontrol Paneli" />
+                            <SidebarItem id="bookings" icon="fa-calendar-check" label="Rezervasyonlar" />
+                            <SidebarItem id="timeline" icon="fa-stream" label="Zaman Çizelgesi" />
+                            <SidebarItem id="drivers" icon="fa-user-tie" label="Sürücü Yönetimi" />
+                            <SidebarItem id="customers" icon="fa-users" label="Müşteri CRM" />
+                            <SidebarItem id="routes" icon="fa-map-marked-alt" label="Fiyat / Rota" />
+                            <SidebarItem id="locations" icon="fa-map-pin" label="Bölge & Havalimanı" />
+                            <SidebarItem id="fleet" icon="fa-car" label="VIP Araçlar" />
+                            <SidebarItem id="settings" icon="fa-cog" label="Site Ayarları" />
+                        </nav>
                         <div className="p-8 border-t border-slate-50">
                             <a href="index.html" target="_blank" className="flex items-center gap-3 text-xs font-black text-slate-400 hover:text-blue-600 transition-all uppercase tracking-widest">
                                 <i className="fas fa-external-link-alt text-lg"></i> Siteyi Aç
@@ -131,12 +134,14 @@
                             <div>
                                 <h1 className="text-3xl font-black text-slate-900 h-font uppercase tracking-tighter">
                                     {activeTab === 'dashboard' ? 'Dashboard' :
-                                     activeTab === 'bookings' ? 'Rezervasyon Yönetimi' :
+                                     activeTab === 'bookings' ? 'Rezervasyon & Atama' :
+                                     activeTab === 'drivers' ? 'Sürücü Portföyü' :
+                                     activeTab === 'timeline' ? 'Zaman Akışı' :
                                      activeTab === 'routes' ? 'Fiyatlandırma' :
                                      activeTab === 'locations' ? 'Havalimanı & Bölge' :
                                      activeTab === 'fleet' ? 'Araç Yönetimi' : 'Yapılandırma'}
                                 </h1>
-                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Sistem Durumu: <span class="text-green-500">Operasyonel</span></p>
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Sistem Durumu: <span className="text-green-500">Operasyonel</span></p>
                             </div>
                             <div className="flex items-center gap-6">
                                 <button onClick={sync} className={`w-10 h-10 rounded-full bg-white border border-slate-100 text-slate-400 hover:text-blue-600 transition-all shadow-sm ${refreshing ? 'animate-spin' : ''}`}>
@@ -156,6 +161,7 @@
                             {activeTab === 'dashboard' && <DashboardView data={data} />}
                             {activeTab === 'bookings' && <BookingsView data={data} updateData={updateData} showToast={showToast} />}
                             {activeTab === 'timeline' && <TimelineView data={data} />}
+                            {activeTab === 'drivers' && <DriversView data={data} showToast={showToast} updateData={updateData} />}
                             {activeTab === 'customers' && <CustomersView data={data} showToast={showToast} />}
                             {activeTab === 'routes' && <RoutesView data={data} updateData={updateData} showToast={showToast} />}
                             {activeTab === 'locations' && <LocationsView data={data} updateData={updateData} showToast={showToast} />}
@@ -308,6 +314,22 @@
                                         <div className="flex gap-4 mt-2">
                                             <button onClick={()=>sendWA(r)} className="text-green-500 hover:scale-125 transition-transform"><i className="fab fa-whatsapp"></i></button>
                                             <button onClick={()=>sendEmail(r)} className="text-blue-500 hover:scale-125 transition-transform"><i className="fas fa-envelope"></i></button>
+                                        </div>
+                                        <div className="mt-4">
+                                            <select 
+                                                value={r.driver_id || ''} 
+                                                onChange={async (e) => {
+                                                    const dId = e.target.value;
+                                                    const dName = data.drivers.find(d => d.id === dId)?.full_name || '';
+                                                    const { error } = await sb.from('reservations').update({ driver_id: dId || null, driver_name: dName }).eq('id', r.id);
+                                                    if (error) alert(error.message);
+                                                    else showToast(`Sürücü: ${dName || 'Atama Kaldırıldı'}`);
+                                                }}
+                                                className="w-full bg-slate-100 p-2 rounded-lg text-[9px] font-black uppercase outline-none focus:bg-white border focus:border-blue-200"
+                                            >
+                                                <option value="">SÜRÜCÜ ATAMASI</option>
+                                                {data.drivers.map(d => <option key={d.id} value={d.id}>{d.full_name} ({d.plate_no})</option>)}
+                                            </select>
                                         </div>
                                     </td>
                                     <td className="px-10 py-8">
@@ -476,6 +498,79 @@
                 </div>
             </div>
         );
+
+        const DriversView = ({ data, showToast, updateData }) => {
+            const [newD, setNewD] = useState({ name: '', phone: '', plate: '', model: '' });
+
+            const addDriver = async () => {
+                if(!newD.name || !newD.phone) return;
+                const { data: d, error } = await sb.from('drivers').insert({
+                    site_key: SITE_KEY,
+                    full_name: newD.name,
+                    phone: newD.phone,
+                    plate_no: newD.plate,
+                    vehicle_model: newD.model
+                }).select();
+                if (error) return alert(error.message);
+                setNewD({ name: '', phone: '', plate: '', model: '' });
+                showToast('Sürücü eklendi');
+            };
+
+            const toggleDriver = async (id, current) => {
+                const { error } = await sb.from('drivers').update({ is_active: !current }).eq('id', id);
+                if (error) return alert(error.message);
+                showToast('Durum güncellendi');
+            };
+
+            const delDriver = async (id) => {
+                if(!confirm('Sürücüyü silmek istiyor musunuz?')) return;
+                const { error } = await sb.from('drivers').delete().eq('id', id);
+                if (error) return alert(error.message);
+                showToast('Sürücü silindi');
+            };
+
+            return (
+                <div className="space-y-10">
+                    <div className="card p-10 bg-slate-50 border-none shadow-inner">
+                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 border-b pb-4">Yeni Sürücü & Araç Kaydı</h3>
+                        <div className="grid grid-cols-5 gap-6 items-end">
+                            <Inp label="SÜRÜCÜ AD SOYAD" val={newD.name} onChange={v => setNewD({...newD, name: v})} />
+                            <Inp label="GSM NO" val={newD.phone} onChange={v => setNewD({...newD, phone: v})} />
+                            <Inp label="ARAÇ MODEL" val={newD.model} onChange={v => setNewD({...newD, model: v})} />
+                            <Inp label="PLAKA" val={newD.plate} onChange={v => setNewD({...newD, plate: v})} />
+                            <button onClick={addDriver} className="bg-black text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl">EKLE</button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-8">
+                        {data.drivers.map(d => (
+                            <div key={d.id} className="card p-8 border border-slate-100 group hover:border-blue-200 transition-all">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner ${d.is_active ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                                        <i className="fas fa-user-tie"></i>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => toggleDriver(d.id, d.is_active)} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${d.is_active ? 'bg-orange-50 text-orange-600' : 'bg-green-50 text-green-600'}`}>
+                                            <i className={`fas ${d.is_active ? 'fa-pause' : 'fa-play'}`}></i>
+                                        </button>
+                                        <button onClick={() => delDriver(d.id)} className="w-8 h-8 bg-red-50 text-red-600 rounded-lg flex items-center justify-center"><i className="fas fa-trash"></i></button>
+                                    </div>
+                                </div>
+                                <h4 className="font-black text-xl h-font uppercase italic tracking-tighter text-slate-900">{d.full_name}</h4>
+                                <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-tight">{d.phone}</p>
+                                <div className="mt-6 pt-6 border-t border-slate-50 flex justify-between items-center">
+                                    <div>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">ARAÇ / PLAKA</p>
+                                        <p className="text-xs font-black text-blue-600 mt-1 uppercase italic tracking-tighter">{d.vehicle_model || 'Belirtilmedi'} / {d.plate_no || '---'}</p>
+                                    </div>
+                                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${d.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>{d.is_active ? 'AKTİF' : 'PASİF'}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
 
         const CustomersView = ({ data, showToast }) => {
             const customers = Array.from(new Set(data.reservations.map(r => r.customer_email || r.customer_phone))).map(identity => {
@@ -648,7 +743,7 @@
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">{label}</label>
                 {type === 'select' ? (
                     <select value={val} onChange={e => onChange(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-extrabold focus:bg-white border focus:border-blue-200 uppercase tracking-tight text-sm">
-                        {options.map(o => <option key={o}>{o}</option>)}
+                        {options.map((o, i) => <option key={i} value={o}>{o}</option>)}
                     </select>
                 ) : (
                     <input type={type} value={val} onChange={e => onChange(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl outline-none font-extrabold focus:bg-white border focus:border-blue-200 uppercase tracking-tight text-sm" />
