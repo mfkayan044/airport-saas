@@ -181,63 +181,69 @@
 
         // --- SUB VIEWS ---
 
-        const DashboardView = ({ data }) => (
-            <div className="space-y-12">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <StatCard label="Bugünkü Talep" value={data.reservations.filter(r => r.date.includes('2026-03-24')).length || 0} icon="fa-bolt" color="blue" />
-                    <StatCard label="Aylık Hacim" value={data.currency + " 124.800"} icon="fa-wallet" color="green" />
-                    <StatCard label="Aktif Filo" value="%92" icon="fa-car-battery" color="indigo" />
-                    <StatCard label="Onay Oranı" value="%98.4" icon="fa-chart-line" color="orange" />
-                </div>
-                
-                <div className="grid grid-cols-3 gap-10">
-                    <div className="col-span-2 card p-10">
-                        <h3 className="text-xl font-black h-font mb-10 uppercase tracking-tighter">Son Rezervasyonlar</h3>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="border-b border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                    <tr>
-                                        <th className="pb-4 text-left">Müşteri / ID</th>
-                                        <th className="pb-4 text-left">Rota</th>
-                                        <th className="pb-4 text-right">Durum</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {data.reservations.slice(0, 8).map(r => (
-                                        <tr key={r.id} className="group hover:bg-slate-50 transition-colors">
-                                            <td className="py-5">
-                                                <p className="font-black text-slate-900 tracking-tight text-sm uppercase">{r.name}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase italic mt-1">#{r.id}</p>
-                                            </td>
-                                            <td className="py-5">
-                                                <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">{r.from} ➔ {r.to}</p>
-                                                <p className="text-[10px] text-blue-500 font-bold mt-1">{r.date} / {r.time}</p>
-                                            </td>
-                                            <td className="py-5 text-right">
-                                                <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${r.status === 'Onaylandı' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
-                                                    {r.status}
-                                                </span>
-                                            </td>
+        const DashboardView = ({ data }) => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayBookings = data.reservations.filter(r => r.transfer_date && r.transfer_date.includes(todayStr)).length;
+            const monthlySpent = data.reservations.reduce((acc, curr) => acc + (curr.total_price || 0), 0);
+
+            return (
+                <div className="space-y-12">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <StatCard label="Bugünkü Talep" value={todayBookings} icon="fa-bolt" color="blue" />
+                        <StatCard label="Toplam Ciro" value={data.currency + " " + monthlySpent.toLocaleString()} icon="fa-wallet" color="green" />
+                        <StatCard label="Aktif Filo" value={data.fleet.filter(f => f.is_active).length} icon="fa-car-battery" color="indigo" />
+                        <StatCard label="Müşteri Memnuniyeti" value="%98.4" icon="fa-chart-line" color="orange" />
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-10">
+                        <div className="col-span-2 card p-10">
+                            <h3 className="text-xl font-black h-font mb-10 uppercase tracking-tighter italic">Son Kayıtlar</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="border-b border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        <tr>
+                                            <th className="pb-4 text-left">Müşteri / Ref</th>
+                                            <th className="pb-4 text-left">Rota Info</th>
+                                            <th className="pb-4 text-right">Durum</th>
                                         </tr>
-                                    ))}
-                                    {data.reservations.length === 0 && <tr><td colSpan="3" class="py-10 text-center font-bold text-slate-300 italic uppercase underline">Herhangi bir kayıt bulunamadı</td></tr>}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {data.reservations.slice(0, 8).map(r => (
+                                            <tr key={r.id} className="group hover:bg-slate-50 transition-colors">
+                                                <td className="py-5">
+                                                    <p className="font-black text-slate-900 tracking-tight text-sm uppercase">{r.customer_name}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase italic mt-1">#{r.id.split('-')[0]}</p>
+                                                </td>
+                                                <td className="py-5">
+                                                    <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">{r.from_location} ➔ {r.to_location}</p>
+                                                    <p className="text-[10px] text-blue-500 font-black mt-1 uppercase tracking-widest">{r.transfer_date} / {r.transfer_time}</p>
+                                                </td>
+                                                <td className="py-5 text-right">
+                                                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${r.status === 'Onaylandı' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
+                                                        {r.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {data.reservations.length === 0 && <tr><td colSpan="3" className="py-10 text-center font-bold text-slate-300 italic uppercase">Kayıt Bulunmuyor</td></tr>}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div className="card p-10 bg-slate-900 text-white relative overflow-hidden">
+                            <i className="fas fa-shield-check absolute -bottom-10 -right-10 text-[200px] opacity-10"></i>
+                            <h3 className="text-xl font-black h-font mb-10 tracking-tighter">Operasyonel Güç</h3>
+                            <div className="space-y-8 relative z-10">
+                                <div><p className="text-[10px] font-black opacity-50 uppercase mb-2">Günlük Hedef</p><div className="w-full bg-white/10 h-2 rounded-full"><div className="w-[75%] bg-blue-500 h-full rounded-full shadow-lg shadow-blue-500/50"></div></div><p className="text-right text-[10px] mt-2 font-black">75%</p></div>
+                                <div><p className="text-[10px] font-black opacity-50 uppercase mb-2">Bölgesel Yoğunluk</p><p className="font-black h-font text-3xl italic tracking-widest">TAK<span className="text-blue-500">SIM</span></p></div>
+                                <hr className="opacity-10" />
+                                <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-white/10 transition-all">Sistem Raporu Al</button>
+                            </div>
                         </div>
                     </div>
-                    <div className="card p-10 bg-slate-900 text-white relative overflow-hidden">
-                        <i className="fas fa-shield-check absolute -bottom-10 -right-10 text-[200px] opacity-10"></i>
-                         <h3 className="text-xl font-black h-font mb-10 tracking-tighter">Operasyonel Güç</h3>
-                         <div className="space-y-8 relative z-10">
-                            <div><p className="text-[10px] font-black opacity-50 uppercase mb-2">Günlük Hedef</p><div className="w-full bg-white/10 h-2 rounded-full"><div className="w-[75%] bg-blue-500 h-full rounded-full shadow-lg shadow-blue-500/50"></div></div><p className="text-right text-[10px] mt-2 font-black">75%</p></div>
-                            <div><p className="text-[10px] font-black opacity-50 uppercase mb-2">Bölgesel Yoğunluk</p><p className="font-black h-font text-3xl italic tracking-widest">TAK<span class="text-blue-500">SIM</span></p></div>
-                            <hr className="opacity-10" />
-                            <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-[10px] tracking-widest uppercase hover:bg-white/10 transition-all">Sistem Raporu Al</button>
-                         </div>
-                    </div>
                 </div>
-            </div>
-        );
+            );
+        };
 
         const StatCard = ({ label, value, icon, color }) => (
             <div className="card p-8 flex items-center gap-6">
