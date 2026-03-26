@@ -313,7 +313,12 @@
         };
 
         const RoutesView = ({ data, showToast }) => {
-            const [rt, setRt] = useState({ airport_name: data.airports[0]?.name, location: data.districts[0]?.name, vehicle_type: 'Vito', price: 0 });
+            const [rt, setRt] = useState({ 
+                airport_name: data.airports[0]?.name || '', 
+                location: data.districts[0]?.name || '', 
+                vehicle_type: 'Vito', 
+                price: 0 
+            });
             
             const addRoute = async () => {
                 const { error } = await sb.from('routes').insert({ ...rt, site_key: SITE_KEY });
@@ -331,11 +336,12 @@
                 <div className="space-y-10">
                     <div className="card p-10 bg-white">
                         <h3 className="text-xl font-black h-font mb-10 uppercase tracking-tighter">Lokasyon Bazlı Fiyatlandırma</h3>
-                        <div className="grid grid-cols-4 gap-8">
+                        <div className="grid grid-cols-5 gap-6">
                             <Inp label="Havalimanı" type="select" options={data.airports.map(a=>a.name)} val={rt.airport_name} onChange={v => setRt({...rt, airport_name: v})} />
                             <Inp label="Varış Bölgesi" type="select" options={data.districts.map(d=>d.name)} val={rt.location} onChange={v => setRt({...rt, location: v})} />
+                            <Inp label="Araç Türü" type="select" options={['Sedan', 'Vito', 'Sprinter', 'SUV']} val={rt.vehicle_type} onChange={v => setRt({...rt, vehicle_type: v})} />
                             <Inp label={`Fiyat (${data.currency})`} type="number" val={rt.price} onChange={v => setRt({...rt, price: v})} />
-                            <div className="flex items-end"><button onClick={addRoute} className="w-full h-14 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 shadow-xl transition-all">EKLE / GÜNCELLE</button></div>
+                            <div className="flex items-end"><button onClick={addRoute} className="w-full h-14 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 shadow-xl transition-all">EKLE</button></div>
                         </div>
                     </div>
                     <div className="card p-8">
@@ -344,6 +350,7 @@
                                 <tr>
                                     <th className="text-left pb-4">Havalimanı</th>
                                     <th className="text-left pb-4">Bölge</th>
+                                    <th className="text-left pb-4">Araç Türü</th>
                                     <th className="text-left pb-4">Fiyat</th>
                                     <th className="text-right pb-4"></th>
                                 </tr>
@@ -353,6 +360,7 @@
                                     <tr key={r.id} className="hover:bg-slate-50 transition-all">
                                         <td className="py-6 font-black text-slate-900 text-sm uppercase">{r.airport_name}</td>
                                         <td className="py-6 font-bold text-slate-500 uppercase text-xs">{r.location}</td>
+                                        <td className="py-6 font-black text-blue-500 text-xs italic">{r.vehicle_type || 'Genel'}</td>
                                         <td className="py-6 font-black text-lg text-blue-600 italic">{data.currency}{r.price}</td>
                                         <td className="py-6 text-right"><button onClick={() => deleteRoute(r.id)} className="text-red-300 hover:text-red-500"><i className="fas fa-trash"></i></button></td>
                                     </tr>
