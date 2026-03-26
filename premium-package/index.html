@@ -224,10 +224,10 @@
             try {
                 const [settings, airports, districts, fleet, routes] = await Promise.all([
                     sb.from('site_settings').select('*').eq('site_key', SITE_KEY).single(),
-                    sb.from('airports').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
-                    sb.from('districts').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
+                    sb.from('airports').select('*').eq('site_key', SITE_KEY),
+                    sb.from('districts').select('*').eq('site_key', SITE_KEY),
                     sb.from('fleet').select('*').eq('site_key', SITE_KEY).eq('is_active', true),
-                    sb.from('routes').select('*').eq('site_key', SITE_KEY).eq('is_active', true)
+                    sb.from('routes').select('*').eq('site_key', SITE_KEY)
                 ]);
 
                 if (settings.data) {
